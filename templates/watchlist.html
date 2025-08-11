@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Dashboard - Watchlist</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Updated Background Color */
+        body {
+            background-color: #000000; /* Black Background */
+            color: #ffffff; /* White Text */
+            font-size: 18px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0; /* Remove default margin for full coverage */
+            padding: 0; /* Remove default padding for full coverage */
+            min-height: 100vh; /* Ensure the background covers the full viewport height */
+        }
+
+        .dashboard-container {
+            max-width: 1400px; /* Increased Width */
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .card {
+            background: #1a1a1a; /* Dark Grey Background for Cards */
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(255, 255, 255, 0.1); /* Subtle Shadow */
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .index-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Increased Column Size */
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .index-card {
+            background: #2d2d2d; /* Slightly Lighter Grey for Index Cards */
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .index-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .index-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .watchlist-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 0.5fr; /* Adjusted Columns */
+            align-items: center;
+            padding: 1.25rem;
+            border-bottom: 1px solid #333333; /* Lighter Border for Contrast */
+            transition: all 0.3s ease; /* Smooth Transition */
+        }
+
+        .watchlist-item:hover {
+            background-color: #2d2d2d; /* Slightly Lighter Grey on Hover */
+            transform: translateY(-2px); /* Lift Effect */
+            box-shadow: 0 4px 6px -1px rgba(255, 255, 255, 0.1); /* Subtle Shadow on Hover */
+        }
+
+        .stock-price {
+            font-family: 'Monaco', monospace;
+            color: #ffffff; /* White Text */
+            font-size: 1.2rem;
+        }
+
+        .action-button {
+            padding: 0.875rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.2s ease; /* Smooth Transition */
+        }
+
+        .action-button:hover {
+            transform: translateY(-1px); /* Slight Lift on Hover */
+            box-shadow: 0 2px 4px -1px rgba(255, 255, 255, 0.1); /* Subtle Shadow on Hover */
+        }
+
+        .add-button {
+            background-color: #38a169; /* Green Button */
+            color: white;
+        }
+
+        .add-button:hover {
+            background-color: #2f855a;
+        }
+
+        .delete-button {
+            background-color: #e53e3e; /* Red Button */
+            color: white;
+        }
+
+        .delete-button:hover {
+            background-color: #c53030;
+        }
+
+        .trade-button {
+            background-color: #3182ce; /* Blue Button */
+            color: white;
+        }
+
+        .trade-button:hover {
+            background-color: #2b6cb0;
+        }
+
+        .nav-link {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            color: white; /* White Text for Nav Links */
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .nav-link:hover {
+            background-color: #4a5568; /* Dark Grey Hover for Nav Links */
+        }
+
+        input, select {
+            padding: 1rem;
+            border: 1px solid #444444; /* Dark Grey Border */
+            border-radius: 0.5rem;
+            margin-right: 0.5rem;
+            background-color: #1a1a1a; /* Dark Grey Background */
+            color: #ffffff; /* White Text */
+            font-size: 1.1rem;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #90cdf4; /* Light Blue Border on Focus */
+            box-shadow: 0 0 0 3px rgba(144, 205, 244, 0.1);
+        }
+
+        .card h2 {
+            border-bottom: 1px solid #333333;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            color: #ffffff;
+        }
+
+        /* Styling for Change and Change % */
+        .change-positive {
+            color: #38a169; /* Green for Positive Change */
+        }
+
+        .change-negative {
+            color: #e53e3e; /* Red for Negative Change */
+        }
+    </style>
+</head>
+<body>
+    <nav class="bg-gray-900 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-white">Trading Dashboard</h1>
+                <div class="space-x-4">
+                    <a href="/wallet" class="nav-link"><i class="fas fa-wallet mr-2"></i>Wallet</a>
+                    <a href="/trade-log" class="nav-link"><i class="fas fa-history mr-2"></i>Trade Log</a>
+                    <a href="/option-trade-log" class="nav-link"><i class="fas fa-exchange-alt mr-2"></i>Option Positions</a>
+                    <a href="/holdings" class="nav-link"><i class="fas fa-briefcase mr-2"></i>Holdings</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <!-- Indices Section -->
+        <div class="card">
+            <h2 class="text-xl font-semibold text-gray-200 mb-4">Market Indices</h2>
+            <div class="index-section">
+                <div class="index-card">
+                    <i class="fas fa-chart-line text-2xl mb-2 text-blue-400"></i>
+                    <div class="index-name">Nifty</div>
+                    <div class="index-value">{{ index_prices['^NSEI'].price }}</div>
+                    {% if index_prices['^NSEI'].change != 'N/A' %}
+                    <div class="{% if index_prices['^NSEI'].change > 0 %}change-positive{% else %}change-negative{% endif %}">
+                        {{ index_prices['^NSEI'].change }} ({{ index_prices['^NSEI'].change_percent }}%)
+                    </div>
+                    {% else %}
+                    <div class="text-gray-500">N/A</div>
+                    {% endif %}
+                </div>
+                <div class="index-card">
+                    <i class="fas fa-chart-line text-2xl mb-2 text-green-400"></i>
+                    <div class="index-name">Nasdaq</div>
+                    <div class="index-value">{{ index_prices['^IXIC'].price }}</div>
+                    {% if index_prices['^IXIC'].change != 'N/A' %}
+                    <div class="{% if index_prices['^IXIC'].change > 0 %}change-positive{% else %}change-negative{% endif %}">
+                        {{ index_prices['^IXIC'].change }} ({{ index_prices['^IXIC'].change_percent }}%)
+                    </div>
+                    {% else %}
+                    <div class="text-gray-500">N/A</div>
+                    {% endif %}
+                </div>
+                <div class="index-card">
+                    <i class="fas fa-chart-line text-2xl mb-2 text-purple-400"></i>
+                    <div class="index-name">Dow Jones</div>
+                    <div class="index-value">{{ index_prices['^DJI'].price }}</div>
+                    {% if index_prices['^DJI'].change != 'N/A' %}
+                    <div class="{% if index_prices['^DJI'].change > 0 %}change-positive{% else %}change-negative{% endif %}">
+                        {{ index_prices['^DJI'].change }} ({{ index_prices['^DJI'].change_percent }}%)
+                    </div>
+                    {% else %}
+                    <div class="text-gray-500">N/A</div>
+                    {% endif %}
+                </div>
+                <div class="index-card">
+                    <i class="fas fa-chart-line text-2xl mb-2 text-yellow-400"></i>
+                    <div class="index-name">Sensex</div>
+                    <div class="index-value">{{ index_prices['^BSESN'].price }}</div>
+                    {% if index_prices['^BSESN'].change != 'N/A' %}
+                    <div class="{% if index_prices['^BSESN'].change > 0 %}change-positive{% else %}change-negative{% endif %}">
+                        {{ index_prices['^BSESN'].change }} ({{ index_prices['^BSESN'].change_percent }}%)
+                    </div>
+                    {% else %}
+                    <div class="text-gray-500">N/A</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Watchlist Section -->
+            <div class="lg:col-span-2">
+                <div class="card">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold text-gray-200">Watchlist</h2>
+                        <form method="POST" class="flex">
+                            <input type="text" name="stock_symbol" placeholder="Enter Stock Symbol" class="mr-2 w-full md:w-96">
+                            <button type="submit" class="action-button add-button">
+                                <i class="fas fa-plus mr-1"></i>Add
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="divide-y divide-gray-700">
+                        {% for stock in watchlist %}
+                        {% set stock_symbol = stock[0] %}
+                        {% set data = prices[stock_symbol] %}
+                        <div class="watchlist-item">
+                            <div class="flex-1 flex items-center">
+                                <i class="fas fa-building text-xl mr-2 text-gray-400"></i>
+                                <span class="font-medium text-gray-200 text-lg">{{ stock_symbol }}</span>
+                            </div>
+                            <div class="flex-1">
+                                <span class="stock-price">${{ data.price }}</span>
+                                {% if data.change != 'N/A' %}
+                                <i class="fas {% if data.change > 0 %}fa-arrow-up change-positive{% else %}fa-arrow-down change-negative{% endif %} ml-2"></i>
+                                {% endif %}
+                            </div>
+                            <div class="flex-1">
+                                {% if data.change != 'N/A' %}
+                                <span class="{% if data.change > 0 %}change-positive{% else %}change-negative{% endif %}">
+                                    {{ data.change }}
+                                </span>
+                                {% else %}
+                                <span class="text-gray-500">N/A</span>
+                                {% endif %}
+                            </div>
+                            <div class="flex-1">
+                                {% if data.change_percent != 'N/A' %}
+                                <span class="{% if data.change_percent > 0 %}change-positive{% else %}change-negative{% endif %}">
+                                    ({{ data.change_percent }}%)
+                                </span>
+                                {% else %}
+                                <span class="text-gray-500">N/A</span>
+                                {% endif %}
+                            </div>
+                            <div class="flex space-x-2">
+                                <form action="/option_chain/{{ stock_symbol.replace('.NS', '') }}" method="GET">
+                                    <button type="submit" class="action-button trade-button">
+                                        <i class="fas fa-chart-bar"></i> Options
+                                    </button>
+                                </form>
+                                <button onclick="showChart('{{ stock_symbol.replace('.NS', '') }}')" class="action-button trade-button">
+                                    <i class="fas fa-chart-line"></i> Chart
+                                </button>
+                                <form action="/delete-watchlist/{{ stock_symbol }}" method="POST">
+                                    <button type="submit" class="action-button delete-button">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trade Form Section -->
+            <div class="lg:col-span-1">
+                <div class="card">
+                    <h2 class="text-xl font-semibold text-gray-200 mb-4">Quick Trade</h2>
+                    <form action="/trade" method="POST" class="space-y-4">
+                        <div>
+                            <label for="stock_symbol" class="block text-base font-medium text-gray-300 mb-1">Stock Symbol</label>
+                            <input type="text" id="stock_symbol" name="stock_symbol" class="w-full" required>
+                        </div>
+
+                        <div>
+                            <label for="quantity" class="block text-base font-medium text-gray-300 mb-1">Quantity</label>
+                            <input type="number" id="quantity" name="quantity" min="1" class="w-full" required>
+                        </div>
+
+                        <div>
+                            <label for="action" class="block text-base font-medium text-gray-300 mb-1">Action</label>
+                            <select id="action" name="action" class="w-full" required>
+                                <option value="buy">Buy</option>
+                                <option value="sell">Sell</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="action-button trade-button w-full">
+                            <i class="fas fa-exchange-alt mr-1"></i>Submit Trade
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Modal -->
+    <div id="chartModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-2">
+            <div class="bg-gray-900 rounded-lg w-full max-w-7xl" style="height: 90vh;">
+                <div class="flex justify-between items-center p-4 border-b border-gray-700">
+                    <h3 class="text-xl font-semibold text-white" id="chartTitle">Stock Chart</h3>
+                    <button onclick="closeChart()" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+                </div>
+                <div class="p-2" style="height: calc(90vh - 80px);">
+                    <div id="tradingview-widget" class="w-full h-full"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showChart(symbol) {
+            // Convert Yahoo Finance symbol to TradingView format
+            let tvSymbol = symbol;
+            if (symbol.endsWith('.NS')) {
+                tvSymbol = 'NSE:' + symbol.replace('.NS', '');
+            } else if (symbol.endsWith('.BO')) {
+                tvSymbol = 'BSE:' + symbol.replace('.BO', '');
+            } else if (symbol.startsWith('^')) {
+                // Handle indices
+                if (symbol === '^NSEI') tvSymbol = 'NIFTY';
+                else if (symbol === '^BSESN') tvSymbol = 'SENSEX';
+                else tvSymbol = symbol;
+            }
+            
+            document.getElementById('chartTitle').textContent = symbol + ' Chart';
+            document.getElementById('chartModal').classList.remove('hidden');
+            
+            // Create TradingView widget
+            new TradingView.widget({
+                "width": "100%",
+                "height": "100%",
+                "symbol": tvSymbol,
+                "interval": "D",
+                "timezone": "Asia/Kolkata",
+                "theme": "dark",
+                "style": "1",
+                "locale": "in",
+                "toolbar_bg": "#f1f3f6",
+                "enable_publishing": false,
+                "hide_side_toolbar": false,
+                "allow_symbol_change": true,
+                "container_id": "tradingview-widget"
+            });
+        }
+
+        function closeChart() {
+            document.getElementById('chartModal').classList.add('hidden');
+            // Clear the widget container
+            document.getElementById('tradingview-widget').innerHTML = '';
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('chartModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeChart();
+            }
+        });
+    </script>
+
+    <!-- TradingView Widget Script -->
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+</body>
+</html>

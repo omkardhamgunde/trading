@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Option Chain - {{ stock_symbol }}</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            min-height: 100vh;
+        }
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .card {
+            background: #1a1a1a;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .nav-link {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            color: white;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .nav-link:hover {
+            background-color: #4a5568;
+        }
+        .action-button {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        .action-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px -1px rgba(255, 255, 255, 0.1);
+        }
+        .buy-button {
+            background-color: #38a169;
+            color: white;
+        }
+        .buy-button:hover {
+            background-color: #2f855a;
+        }
+        .sell-button {
+            background-color: #e53e3e;
+            color: white;
+        }
+        .sell-button:hover {
+            background-color: #c53030;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        th, td {
+            padding: 0.75rem;
+            border: 1px solid #333333;
+            text-align: right;
+        }
+        th {
+            background-color: #2d2d2d;
+            font-weight: bold;
+            text-align: center;
+        }
+        .call-row {
+            background-color: #0d0d0d;
+        }
+        .put-row {
+            background-color: #1a1a1a;
+        }
+        .expiry-select {
+            background-color: #1a1a1a;
+            color: white;
+            border: 1px solid #333333;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="bg-gray-900 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-white">Trading Dashboard - Option Chain</h1>
+                <div class="space-x-4">
+                    <a href="/watchlist" class="nav-link"><i class="fas fa-arrow-left mr-2"></i>Back to Watchlist</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="mb-4">
+                {% for category, message in messages %}
+                <div class="p-3 rounded-md {% if category == 'success' %}bg-green-500{% elif category == 'danger' %}bg-red-500{% endif %} text-white mb-2">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% endwith %}
+        <div class="card">
+            <h2 class="text-xl font-semibold text-gray-200 mb-4">Option Chain for {{ stock_symbol }}</h2>
+
+            <div class="mb-4">
+                <label for="expiry-select" class="block text-gray-300 text-sm font-bold mb-2">Select Expiry:</label>
+                <select id="expiry-select" class="expiry-select" onchange="displayOptions()">
+                    {% for expiry in expiries %}
+                    <option value="{{ expiry }}">{{ expiry }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div id="option-tables">
+                {% for expiry, data in options_data.items() %}
+                <div id="options-{{ expiry }}" class="option-expiry-section" style="display: none;">
+                    <h3 class="text-lg font-semibold text-gray-200 mt-6 mb-2">Calls - {{ expiry }}</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Strike</th>
+                                <th>Bid</th>
+                                <th>Ask</th>
+                                <th>Last Price</th>
+                                <th>Volume</th>
+                                <th>Open Interest</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for call in data.calls %}
+                            <tr class="call-row">
+                                <td>{{ "%.2f"|format(call.strike) }}</td>
+                                <td>{{ "%.2f"|format(call.bid) if call.bid != None else 'N/A' }}</td>
+                                <td>{{ "%.2f"|format(call.ask) if call.ask != None else 'N/A' }}</td>
+                                <td>{{ "%.2f"|format(call.lastPrice) if call.lastPrice != None else 'N/A' }}</td>
+                                <td>{{ call.volume if call.volume != None else 'N/A' }}</td>
+                                <td>{{ call.openInterest if call.openInterest != None else 'N/A' }}</td>
+                                <td>
+                                    <form action="/trade_option" method="POST" class="inline-block">
+                                        <input type="hidden" name="symbol" value="{{ stock_symbol }}">
+                                        <input type="hidden" name="option_symbol" value="{{ call.contractSymbol }}">
+                                        <input type="hidden" name="action" value="buy">
+                                        <input type="hidden" name="price" value="{{ call.ask }}">
+                                        <input type="hidden" name="type" value="call">
+                                        <button type="submit" class="action-button buy-button">Buy</button>
+                                    </form>
+                                    <form action="/trade_option" method="POST" class="inline-block ml-2">
+                                        <input type="hidden" name="symbol" value="{{ stock_symbol }}">
+                                        <input type="hidden" name="option_symbol" value="{{ call.contractSymbol }}">
+                                        <input type="hidden" name="action" value="sell">
+                                        <input type="hidden" name="price" value="{{ call.bid }}">
+                                        <input type="hidden" name="type" value="call">
+                                        <button type="submit" class="action-button sell-button">Sell</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <h3 class="text-lg font-semibold text-gray-200 mt-6 mb-2">Puts - {{ expiry }}</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Strike</th>
+                                <th>Bid</th>
+                                <th>Ask</th>
+                                <th>Last Price</th>
+                                <th>Volume</th>
+                                <th>Open Interest</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for put in data.puts %}
+                            <tr class="put-row">
+                                <td>{{ "%.2f"|format(put.strike) }}</td>
+                                <td>{{ "%.2f"|format(put.bid) if put.bid != None else 'N/A' }}</td>
+                                <td>{{ "%.2f"|format(put.ask) if put.ask != None else 'N/A' }}</td>
+                                <td>{{ "%.2f"|format(put.lastPrice) if put.lastPrice != None else 'N/A' }}</td>
+                                <td>{{ put.volume if put.volume != None else 'N/A' }}</td>
+                                <td>{{ put.openInterest if put.openInterest != None else 'N/A' }}</td>
+                                <td>
+                                    <form action="/trade_option" method="POST" class="inline-block">
+                                        <input type="hidden" name="symbol" value="{{ stock_symbol }}">
+                                        <input type="hidden" name="option_symbol" value="{{ put.contractSymbol }}">
+                                        <input type="hidden" name="action" value="buy">
+                                        <input type="hidden" name="price" value="{{ put.ask }}">
+                                        <input type="hidden" name="type" value="put">
+                                        <button type="submit" class="action-button buy-button">Buy</button>
+                                    </form>
+                                    <form action="/trade_option" method="POST" class="inline-block ml-2">
+                                        <input type="hidden" name="symbol" value="{{ stock_symbol }}">
+                                        <input type="hidden" name="option_symbol" value="{{ put.contractSymbol }}">
+                                        <input type="hidden" name="action" value="sell">
+                                        <input type="hidden" name="price" value="{{ put.bid }}">
+                                        <input type="hidden" name="type" value="put">
+                                        <button type="submit" class="action-button sell-button">Sell</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function displayOptions() {
+            var expirySelect = document.getElementById("expiry-select");
+            var selectedExpiry = expirySelect.value;
+            var optionSections = document.getElementsByClassName("option-expiry-section");
+
+            for (var i = 0; i < optionSections.length; i++) {
+                optionSections[i].style.display = "none";
+            }
+            document.getElementById("options-" + selectedExpiry).style.display = "block";
+        }
+
+        // Display options for the first expiry on page load
+        document.addEventListener("DOMContentLoaded", function() {
+            displayOptions();
+        });
+    </script>
+</body>
+</html> 

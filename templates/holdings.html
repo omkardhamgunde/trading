@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-container">
+    <h2>Your Holdings</h2>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Stock Symbol</th>
+                            <th>Quantity</th>
+                            <th>Average Buy Price</th>
+                            <th>Current Price</th>
+                            <th>Total Value</th>
+                            <th>Profit/Loss</th>
+                            <th>Profit/Loss %</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if holdings %}
+                            {% for holding in holdings %}
+                                <tr>
+                                    <td>
+                                        <i class="fas fa-building text-xl mr-2 text-gray-400"></i>
+                                        <strong>{{ holding.symbol }}</strong>
+                                    </td>
+                                    <td>{{ holding.quantity }}</td>
+                                    <td>${{ "%.2f"|format(holding.avg_price) }}</td>
+                                    <td>${{ "%.2f"|format(holding.current_price) }}</td>
+                                    <td>${{ "%.2f"|format(holding.total_value) }}</td>
+                                    <td class="{{ 'text-success' if holding.profit_loss > 0 else 'text-danger' }}">
+                                        <i class="fas {% if holding.profit_loss > 0 %}fa-arrow-up{% else %}fa-arrow-down{% endif %} mr-1"></i>
+                                        <strong>${{ "%.2f"|format(holding.profit_loss) }}</strong>
+                                    </td>
+                                    <td class="{{ 'text-success' if holding.profit_loss_percent > 0 else 'text-danger' }}">
+                                        <strong>{{ "%.2f"|format(holding.profit_loss_percent) }}%</strong>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            <tr class="table-info">
+                                <td colspan="4"><strong>Portfolio Total</strong></td>
+                                <td><strong>${{ "%.2f"|format(total_value) }}</strong></td>
+                                <td class="{{ 'text-success' if total_profit_loss > 0 else 'text-danger' }}">
+                                    <i class="fas {% if total_profit_loss > 0 %}fa-arrow-up{% else %}fa-arrow-down{% endif %} mr-1"></i>
+                                    <strong>${{ "%.2f"|format(total_profit_loss) }}</strong>
+                                </td>
+                                <td class="{{ 'text-success' if total_profit_loss_percent > 0 else 'text-danger' }}">
+                                    <strong>{{ "%.2f"|format(total_profit_loss_percent) }}%</strong>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center">No holdings found</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom styles -->
+<style>
+    body {
+        background-color: #000000;
+        color: #ffffff;
+        font-size: 18px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .dashboard-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .card {
+        background: #1a1a1a;
+        border-radius: 0.75rem;
+        box-shadow: 0 4px 6px -1px rgba(255, 255, 255, 0.1);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    h2 {
+        font-size: 1.25rem;
+        border-bottom: 1px solid #333333;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+        color: #ffffff;
+    }
+
+    .table thead th {
+        background-color: #2d2d2d;
+        color: #ffffff;
+        padding: 1rem;
+    }
+
+    .table td {
+        padding: 1rem;
+        vertical-align: middle;
+        color: #ffffff;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); /* Subtle shadow for readability */
+    }
+
+    .table tbody tr {
+        background-color: #1a1a1a;
+        transition: all 0.3s ease;
+    }
+
+    .table tbody tr:hover {
+        background-color: #444444; /* Lighter gray for hover, better contrast */
+        transform: translateY(-2px);
+    }
+
+    .table tbody tr:hover td {
+        color: #ffffff !important; /* Force white text on hover */
+    }
+
+    .table-info {
+        background-color: #2d2d2d !important;
+    }
+
+    .table-info td {
+        color: #ffffff;
+    }
+
+    .text-success {
+        color: #38a169 !important;
+    }
+
+    .text-danger {
+        color: #e53e3e !important;
+    }
+
+    .text-center {
+        color: #ffffff;
+    }
+</style>
+{% endblock %}

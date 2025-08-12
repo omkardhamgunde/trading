@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, flash
+from flask import Flask, render_template, request, redirect, session, flash, url_for, jsonify
 from flask_mysqldb import MySQL
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
@@ -9,14 +9,58 @@ import pytz
 from datetime import datetime, timedelta
 from collections import defaultdict
 from decimal import Decimal
-from datetime import datetime
-import mysql.connector
+
 from threading import Thread
 import time
 import json
+import os
+import secrets
 from nselib import derivatives
+from google.oauth2 import id_token
+from google_auth_oauthlib.flow import Flow
+from google.auth.transport import requests as google_requests
+import requests
+from flask.sessions import SecureCookieSessionInterface
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'
+app.secret_key = secrets.token_hex(16)
+
+# Configure session
+app.config.update(
+    SECRET_KEY='your_secret_key',  # In production, use a strong secret key from environment variables
+    SESSION_COOKIE_SECURE=False,   # Set to True in production with HTTPS
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+    PERMANENT_SESSION_LIFETIME=timedelta(days=1)  # Session expires after 1 day
+)
+
+
+
+# Google OAuth Configuration
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # Remove in production
+GOOGLE_CLIENT_ID = '255034053753-mpv519khm8tbltnr342fg68312dloau3.apps.googleusercontent.com'
+GOOGLE_CLIENT_SECRET = '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'
+GOOGLE_DISCOVERY_URL = 'https://accounts.google.com/.well-known/openid-configuration'
+
+# Initialize the OAuth flow
+client_config = {
+    "web": {
+        "client_id": GOOGLE_CLIENT_ID,
+        "client_secret": GOOGLE_CLIENT_SECRET,
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "redirect_uris": [
+            "http://localhost:5001/login/google/authorized",
+            "http://127.0.0.1:5001/login/google/authorized"
+        ]
+    }
+}
+
+# Make sure the redirect URI is consistent
+def get_google_redirect_uri():
+    return 'http://localhost:5001/login/google/authorized'  # Use the same as in Google Cloud Console
+
+def get_google_provider_cfg():
+    return requests.get(GOOGLE_DISCOVERY_URL).json()
 
 # MySQL configuration
 app.config['MYSQL_HOST'] = '127.0.0.1'
@@ -24,12 +68,7 @@ app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = 'yui1987'
 app.config['MYSQL_DB'] = 'trading_website'
 
-mysql = mysql.connector.connect(
-    host="127.0.0.1",
-    user="root",
-    password="yui1987",
-    database="trading_website"
-)
+
 
 
 mysql = MySQL(app)
@@ -71,10 +110,153 @@ def login():
             flash('Invalid credentials', 'danger')
     return render_template('login.html', form=form)
 
+# Google OAuth login route
+@app.route('/login/google')
+def google_login():
+    # Generate a new state token for this request
+    state = secrets.token_urlsafe(16)
+    session['oauth_state'] = state  # Store in session
+    session.modified = True  # Ensure session is saved
+    print(f"Setting oauth_state in session: {state}")  # Debug log
+    
+    # Create flow instance to manage the OAuth 2.0 Authorization Grant Flow
+    flow = Flow.from_client_config(
+        client_config,
+        scopes=['openid', 'https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile']
+    )
+    
+    # Set the redirect URI explicitly
+    flow.redirect_uri = get_google_redirect_uri()
+    
+    # Generate the authorization URL with the state parameter
+    authorization_url, _ = flow.authorization_url(
+        access_type='offline',
+        include_granted_scopes='true',
+        state=state,  # Use the same state we stored in the session
+        prompt='select_account'
+    )
+    
+    return redirect(authorization_url)
+
+# Google OAuth callback route
+@app.route('/login/google/authorized')
+def google_authorized():
+    print("\n=== Google OAuth Callback ===")
+    print(f"Session state: {session.get('oauth_state')}")
+    print(f"Request state: {request.args.get('state')}")
+    
+    # Get the state from the session and request
+    session_state = session.pop('oauth_state', None)
+    request_state = request.args.get('state')
+    
+    # Verify the state parameter to prevent CSRF
+    if not session_state or not request_state or session_state != request_state:
+        error_msg = f"Invalid state parameter. Session state: {session_state}, Request state: {request_state}"
+        print(error_msg)
+        flash('Invalid state parameter. Please try logging in again.', 'danger')
+        return redirect(url_for('login'))
+    
+    # Get the authorization code from the response
+    code = request.args.get('code')
+    print(f"Got authorization code: {code[:10]}..." if code else "No code received")
+    
+    # Exchange the authorization code for tokens
+    try:
+        flow = Flow.from_client_config(
+            client_config,
+            scopes=['openid', 'https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile']
+        )
+        
+        # Use the same redirect URI as in the authorization request
+        flow.redirect_uri = get_google_redirect_uri()
+        print(f"Using redirect_uri: {flow.redirect_uri}")
+        
+        flow.fetch_token(code=code)
+        credentials = flow.credentials
+        print("Successfully obtained credentials")
+        
+        idinfo = id_token.verify_oauth2_token(
+            credentials._id_token,
+            google_requests.Request(),
+            GOOGLE_CLIENT_ID,
+            clock_skew_in_seconds=5
+        )
+        print(f"Decoded ID token: {idinfo}")
+        
+        # Get user info
+        google_id = idinfo.get('sub')
+        email = idinfo.get('email')
+        name = idinfo.get('name')
+        
+        print(f"User info - Google ID: {google_id}, Email: {email}, Name: {name}")
+        
+        if not email:
+            error_msg = 'Could not get email from Google'
+            print(error_msg)
+            flash(error_msg, 'danger')
+            return redirect(url_for('login'))
+        
+        cursor = mysql.connection.cursor()
+        
+        # Check if user exists by email or google_id
+        cursor.execute("SELECT * FROM users WHERE email = %s OR google_id = %s", (email, google_id))
+        user = cursor.fetchone()
+        print(f"Existing user from DB: {user}")
+        
+        if not user:
+            # Create new user
+            username = email.split('@')[0]  # Use part before @ as username
+            # Check if username already exists
+            cursor.execute("SELECT * FROM users WHERE username = %s", [username])
+            if cursor.fetchone():
+                # If username exists, append some random string
+                username = f"{username}_{secrets.token_hex(4)}"
+            
+            print(f"Creating new user with username: {username}, email: {email}")
+            
+            # Insert new user
+            cursor.execute(
+                "INSERT INTO users (username, email, google_id) VALUES (%s, %s, %s)",
+                (username, email, google_id)
+            )
+            user_id = cursor.lastrowid
+            print(f"New user created with ID: {user_id}")
+            
+            # Create wallet for new user
+            cursor.execute(
+                "INSERT INTO wallet (user_id, balance) VALUES (%s, %s)",
+                (user_id, 10000)  # Initial balance
+            )
+            mysql.connection.commit()
+            
+            flash('Account created successfully!', 'success')
+        else:
+            user_id = user[0]
+            print(f"Found existing user with ID: {user_id}")
+            # Update Google ID if not set
+            if not user[3]:  # Assuming google_id is the 4th column
+                print(f"Updating Google ID for user {user_id}")
+                cursor.execute("UPDATE users SET google_id = %s WHERE id = %s", (google_id, user_id))
+                mysql.connection.commit()
+        
+        # Set user session
+        session.permanent = True  # Make the session persistent
+        session['user_id'] = user_id
+        session['google_token'] = credentials._id_token
+        
+        print(f"Session after login: {dict(session)}")
+        flash('Logged in with Google successfully!', 'success')
+        return redirect(url_for('watchlist'))
+        
+    except Exception as e:
+        print(f"Error during Google OAuth: {str(e)}")
+        flash('Failed to log in with Google. Please try again.', 'danger')
+        return redirect(url_for('login'))
+
 
 @app.route('/logout')
 def logout():
-    session.pop('user_id', None)
+    session.clear()
     flash('Logged out successfully', 'success')
     return redirect('/login')
 
@@ -534,7 +716,7 @@ def watchlist():
     index_prices = {}
     for index in indices:
         try:
-            index_data = yf.Ticker(index).history(period='2d')  # Fetch last 2 days of data
+            index_data = yf.Ticker(index).history(period='3d')  # Fetch last 3 days of data
             if len(index_data) >= 2:
                 prev_close = index_data['Close'].iloc[-2]  # Previous day's closing price
                 current_price = index_data['Close'].iloc[-1]  # Current price
@@ -876,4 +1058,4 @@ def exit_option_position():
     return redirect('/option-trade-log')
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5001, use_reloader=False)

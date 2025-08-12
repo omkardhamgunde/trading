@@ -304,7 +304,9 @@
         <div class="separator">Or continue with</div>
         
         <div class="social-login">
-            <a href="#" class="social-btn google"><i class="fab fa-google"></i></a>
+            <a href="{{ url_for('google_login') }}" class="social-btn google">
+                <i class="fab fa-google"></i>
+            </a>
             <a href="#" class="social-btn facebook"><i class="fab fa-facebook-f"></i></a>
             <a href="#" class="social-btn apple"><i class="fab fa-apple"></i></a>
         </div>
@@ -313,5 +315,28 @@
             Don't have an account? <a href="#">Sign up</a>
         </div>
     </div>
+    
+    <!-- Add Google OAuth2 script -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <!-- Add CSRF token for AJAX requests -->
+    <script>
+        // Function to handle Google Sign-In success
+        function handleCredentialResponse(response) {
+            // This function is not needed for server-side flow
+            // We're using the direct link approach which is more secure
+        }
+        
+        // Add click handler for Google button
+        document.addEventListener('DOMContentLoaded', function() {
+            const googleBtn = document.querySelector('.social-btn.google');
+            if (googleBtn) {
+                googleBtn.addEventListener('click', function(e) {
+                    // No need to prevent default as we want the link to work normally
+                    // The server will handle the OAuth flow
+                });
+            }
+        });
+    </script>
 </body>
 </html>

@@ -48,20 +48,6 @@ Beautiful, production-minded trading dashboard that showcases full‑stack skill
   - Bootstrap 5 templates under `templates/`
 
 
-## Screenshots
-Add screenshots to help recruiters quickly grasp UX. You can capture from the running app and place images in `assets/`.
-
-<p align="center">
-  <img src="assets/home.png" alt="Home" width="85%" />
-</p>
-<p align="center">
-  <img src="assets/holdings.png" alt="Holdings" width="85%" />
-</p>
-<p align="center">
-  <img src="assets/watchlist.png" alt="Watchlist" width="85%" />
-</p>![](image.png)
-
-
 ## Architecture
 - `app.py`: Flask app, routes, Google OAuth, MySQL wiring
 - `templates/`: Jinja templates (`home.html`, `login.html`, `watchlist.html`, `holdings.html`, ...)

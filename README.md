@@ -45,110 +45,16 @@ Beautiful, production-minded trading dashboard that showcases full‑stack skill
   - Options: basic option chain view and option trade logging
  
 - **Clean UI**
-  - Bootstrap 5 templates under `templates/`
+  - Tailwind CSS templates under `templates/`
 
 
 ## Architecture
 - `app.py`: Flask app, routes, Google OAuth, MySQL wiring
 - `templates/`: Jinja templates (`home.html`, `login.html`, `watchlist.html`, `holdings.html`, ...)
-- `migrations/`: SQL migration files (schema changes, OAuth columns, etc.)
-
 High level flow:
 1. User logs in (email/password) or via Google OAuth.
 2. Watchlist and trading actions stored in MySQL.
 3. Holdings P/L computed using `yfinance` close prices.
- 
-
-
-## Tech Stack
-- Backend: Flask, Flask‑WTF, Flask‑MySQLdb
-- Auth: Google OAuth 2.0 (`google-auth-oauthlib`, `google-auth`)
-- Data: MySQL 8.x
-- Market Data: `yfinance`
-- UI: Bootstrap 5, Jinja2
-
-
-## Local Setup
-Below is a quick setup for Windows PowerShell; adapt for macOS/Linux as needed.
-
-1) Clone repo
-```
-powershell
-# Replace with your repository URL
-git clone <your-repo-url>
-cd dbms_cp
-```
-
-2) Create and activate virtualenv (recommended)
-```
-powershell
-py -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
-
-3) Install dependencies
-```
-powershell
-pip install -r requirements.txt
-```
-If you don’t have a `requirements.txt` yet, generate one from your environment:
-```
-powershell
-pip freeze > requirements.txt
-```
-
-4) Create database and user (MySQL)
-```
-SQL
-CREATE DATABASE trading_website CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
--- Optionally create a dedicated user and grant privileges
-```
-
-
-## Environment Variables
-Set these via a `.env` file or your shell. Do not hardcode secrets in source code.
-
-```
-# Flask
-FLASK_SECRET_KEY=replace_me
-FLASK_ENV=development
-FLASK_RUN_PORT=5001
-
-# MySQL
-MYSQL_HOST=127.0.0.1
-MYSQL_USER=root
-MYSQL_PASSWORD=your_mysql_password
-MYSQL_DB=trading_website
-
-# Google OAuth (from Google Cloud Console)
-GOOGLE_CLIENT_ID=your_client_id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=your_client_secret
-GOOGLE_REDIRECT_URI=http://localhost:5001/login/google/authorized
-
-# Optional: disable HTTPS requirement for local dev (never in prod)
-OAUTHLIB_INSECURE_TRANSPORT=1
-```
-
-Recommended: load these in Flask using `python-dotenv` or `os.environ.get()`.
-
-
-## Database & Migrations
-- Place SQL files in `migrations/`.
-- Example: `migrations/add_google_auth_columns.sql` for adding OAuth columns to `users`.
-- Apply migrations manually or with a simple script.
-
-```
-powershell
-# Example manual apply
-mysql -u root -p trading_website < migrations\add_google_auth_columns.sql
-```
-
-Core tables typically used:
-- `users(id, username, email, password, google_id, ...)`
-- `wallet(id, user_id, balance, ...)`
-- `trade_log(id, user_id, stock_symbol, action, quantity, price, timestamp)`
- 
-- `option_trades(...)` (if present)
 
 
 ## Running the App

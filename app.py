@@ -532,8 +532,19 @@ def watchlist():
     # Handle adding a new stock to the watchlist
     if request.method == 'POST':
         stock_symbol = request.form.get('stock_symbol').upper()
-        cursor.execute("INSERT INTO watchlist (user_id, stock_symbol) VALUES (%s, %s)", (user_id, stock_symbol))
-        mysql.connection.commit()
+        
+        # Check if the stock is already in the watchlist
+        cursor.execute("SELECT * FROM watchlist WHERE user_id = %s AND stock_symbol = %s", (user_id, stock_symbol))
+        if cursor.fetchone():
+            flash(f'{stock_symbol} is already in your watchlist.', 'info')
+        else:
+            # Insert the new stock
+            cursor.execute("INSERT INTO watchlist (user_id, stock_symbol) VALUES (%s, %s)", (user_id, stock_symbol))
+            mysql.connection.commit()
+            flash(f'{stock_symbol} has been added to your watchlist.', 'success')
+        
+        # Redirect to the watchlist page to prevent form resubmission
+        return redirect(url_for('watchlist'))
 
     # Fetch the user's watchlist
     cursor.execute("SELECT stock_symbol FROM watchlist WHERE user_id = %s", [user_id])

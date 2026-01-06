@@ -13,9 +13,7 @@ Beautiful, production-minded trading dashboard that showcases full‑stack skill
 > Built for learning, demoing, and interviewing: clear architecture, secure patterns, intelligent stock search, and thoughtful UX. Easy to run locally on Windows/macOS/Linux.
 
 ## Dashboard Preview
-<p align="center">
-  <img src="image.png" alt="Trading Dashboard" width="85%" />
-</p>
+> A modern, dark-themed trading dashboard with real-time price tracking, intelligent stock search, and portfolio management.
 
 ## Table of Contents
 - [Features](#features)
@@ -84,7 +82,7 @@ trading-main/
 │   ├── holdings.html          # Portfolio holdings with P/L
 │   ├── trade_log.html         # Transaction history
 │   └── wallet.html            # Wallet balance management
-├── image.png                   # Dashboard preview
+├── .gitignore                  # Git ignore file
 └── README.md                   # This file
 ```
 

@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <!-- Balance Card -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Current Balance</h5>
+                    <h2 class="display-4 mb-4 balance-amount">${{ "%.2f"|format(balance) }}</h2>
+                    <p class="text-muted">Available for trading</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Funds Card -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Add Funds</h5>
+                    <form action="{{ url_for('add_funds') }}" method="POST">
+                        <div class="mb-3">
+                            <label for="amount" class="form-label">Amount to Add</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control form-control-lg" id="amount" name="amount" 
+                                       min="1" step="0.01" required 
+                                       placeholder="Enter amount">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success btn-lg">Add Funds</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="row mt-2">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Recent Transactions</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Balance After</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if transactions %}
+                                    {% for transaction in transactions %}
+                                        <tr>
+                                            <td>{{ transaction.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                            <td>
+                                                <span class="badge {% if transaction.type == 'deposit' %}bg-success{% else %}bg-primary{% endif %}">
+                                                    {{ transaction.type|upper }}
+                                                </span>
+                                            </td>
+                                            <td>${{ "%.2f"|format(transaction.amount) }}</td>
+                                            <td>${{ "%.2f"|format(transaction.balance_after) }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4">No recent transactions</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            font-size: 18px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .card {
+            background: #1a1a1a;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #ffffff;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            border-bottom: 1px solid #333333;
+            padding-bottom: 0.5rem;
+            color: #ffffff;
+        }
+
+        .balance-amount {
+            color: #90cdf4; /* Light blue for prominence */
+        }
+
+        input[type="number"] {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            border: 1px solid #444444;
+        }
+
+        .btn-success {
+            background-color: #38a169;
+            border-color: #38a169;
+        }
+
+        .btn-success:hover {
+            background-color: #2f855a;
+            border-color: #2f855a;
+        }
+
+        .table thead th {
+            background-color: #2d2d2d;
+            color: #ffffff;
+        }
+
+        .table tbody tr {
+            background-color: #1a1a1a;
+        }
+
+        .table tbody tr:hover {
+            background-color: #444444;
+        }
+
+        .table td, .table th {
+            color: #ffffff;
+        }
+
+        .alert {
+            background-color: #2d2d2d;
+            color: #ffffff;
+            border: 1px solid #444444;
+        }
+
+        .text-muted {
+            color: #a0a0a0 !important; /* Lighter gray for muted text */
+        }
+
+        .text-center {
+            color: #ffffff;
+        }
+    </style>
+</div>
+{% endblock %}

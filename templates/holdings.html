@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 <div class="dashboard-container">
     <h2>Your Holdings</h2>
     
@@ -27,35 +28,35 @@
                             <th>Profit/Loss %</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="holdings-tbody">
                         {% if holdings %}
                             {% for holding in holdings %}
-                                <tr>
+                                <tr data-symbol="{{ holding.symbol }}">
                                     <td>
                                         <i class="fas fa-building text-xl mr-2 text-gray-400"></i>
                                         <strong>{{ holding.symbol }}</strong>
                                     </td>
-                                    <td>{{ holding.quantity }}</td>
-                                    <td>${{ "%.2f"|format(holding.avg_price) }}</td>
-                                    <td>${{ "%.2f"|format(holding.current_price) }}</td>
-                                    <td>${{ "%.2f"|format(holding.total_value) }}</td>
-                                    <td class="{{ 'text-success' if holding.profit_loss > 0 else 'text-danger' }}">
+                                    <td class="holding-quantity">{{ holding.quantity }}</td>
+                                    <td class="holding-avg-price">${{ "%.2f"|format(holding.avg_price) }}</td>
+                                    <td class="holding-current-price">${{ "%.2f"|format(holding.current_price) }}</td>
+                                    <td class="holding-total-value">${{ "%.2f"|format(holding.total_value) }}</td>
+                                    <td class="holding-profit-loss {{ 'text-success' if holding.profit_loss > 0 else 'text-danger' }}">
                                         <i class="fas {% if holding.profit_loss > 0 %}fa-arrow-up{% else %}fa-arrow-down{% endif %} mr-1"></i>
                                         <strong>${{ "%.2f"|format(holding.profit_loss) }}</strong>
                                     </td>
-                                    <td class="{{ 'text-success' if holding.profit_loss_percent > 0 else 'text-danger' }}">
+                                    <td class="holding-profit-loss-percent {{ 'text-success' if holding.profit_loss_percent > 0 else 'text-danger' }}">
                                         <strong>{{ "%.2f"|format(holding.profit_loss_percent) }}%</strong>
                                     </td>
                                 </tr>
                             {% endfor %}
-                            <tr class="table-info">
+                            <tr class="table-info" id="portfolio-total-row">
                                 <td colspan="4"><strong>Portfolio Total</strong></td>
-                                <td><strong>${{ "%.2f"|format(total_value) }}</strong></td>
-                                <td class="{{ 'text-success' if total_profit_loss > 0 else 'text-danger' }}">
-                                    <i class="fas {% if total_profit_loss > 0 %}fa-arrow-up{% else %}fa-arrow-down{% endif %} mr-1"></i>
+                                <td id="portfolio-total-value"><strong>${{ "%.2f"|format(total_value) }}</strong></td>
+                                <td id="portfolio-total-pl" class="{{ 'text-success' if total_profit_loss > 0 else 'text-danger' }}">
+                                    <i class="fas {% if total_profit_loss > 0 %}fa-arrow-up{% else %}fa-arrow-down{% endif %} mr-1" id="portfolio-pl-icon"></i>
                                     <strong>${{ "%.2f"|format(total_profit_loss) }}</strong>
                                 </td>
-                                <td class="{{ 'text-success' if total_profit_loss_percent > 0 else 'text-danger' }}">
+                                <td id="portfolio-total-pl-percent" class="{{ 'text-success' if total_profit_loss_percent > 0 else 'text-danger' }}">
                                     <strong>{{ "%.2f"|format(total_profit_loss_percent) }}%</strong>
                                 </td>
                             </tr>
@@ -148,5 +149,125 @@
     .text-center {
         color: #ffffff;
     }
+    
+    @keyframes priceFlash {
+        0%, 100% { background-color: transparent; }
+        50% { background-color: rgba(59, 130, 246, 0.3); }
+    }
+    .price-flash {
+        animation: priceFlash 0.5s ease-in-out;
+    }
 </style>
+
+<script>
+    // ============================================
+    // WebSocket Real-Time Holdings Updates
+    // ============================================
+    
+    // Initialize Socket.IO connection
+    console.log('Initializing WebSocket connection for holdings...');
+    const socket = io({
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionAttempts: 10
+    });
+    
+    socket.on('connect', function() {
+        console.log('✅ WebSocket connected for holdings! Socket ID:', socket.id);
+        // Subscribe to holdings updates
+        const userId = {{ session.get('user_id') }};
+        console.log('Subscribing to holdings for user:', userId);
+        socket.emit('subscribe_holdings', { user_id: userId });
+    });
+    
+    socket.on('disconnect', function() {
+        console.log('❌ WebSocket disconnected');
+    });
+    
+    socket.on('connect_error', function(error) {
+        console.error('Connection error:', error);
+    });
+    
+    socket.on('holdings_update', function(data) {
+        console.log('Received holdings update:', data);
+        
+        const holdings = data.holdings;
+        let totalValue = 0;
+        let totalProfitLoss = 0;
+        let totalCost = 0;
+        
+        // Update each holding row
+        holdings.forEach(function(holding) {
+            const row = document.querySelector(`tr[data-symbol="${holding.symbol}"]`);
+            if (row) {
+                // Update current price
+                const currentPriceCell = row.querySelector('.holding-current-price');
+                if (currentPriceCell) {
+                    const oldPrice = parseFloat(currentPriceCell.textContent.replace('$', ''));
+                    currentPriceCell.textContent = '$' + holding.current_price.toFixed(2);
+                    
+                    // Flash animation on change
+                    if (oldPrice !== holding.current_price) {
+                        currentPriceCell.classList.add('price-flash');
+                        setTimeout(() => currentPriceCell.classList.remove('price-flash'), 500);
+                    }
+                }
+                
+                // Update total value
+                const totalValueCell = row.querySelector('.holding-total-value');
+                if (totalValueCell) {
+                    totalValueCell.textContent = '$' + holding.total_value.toFixed(2);
+                }
+                
+                // Update profit/loss
+                const plCell = row.querySelector('.holding-profit-loss');
+                if (plCell) {
+                    const plValue = holding.profit_loss;
+                    plCell.className = 'holding-profit-loss ' + (plValue >= 0 ? 'text-success' : 'text-danger');
+                    const icon = plValue >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+                    plCell.innerHTML = `<i class="fas ${icon} mr-1"></i><strong>$${Math.abs(plValue).toFixed(2)}</strong>`;
+                }
+                
+                // Update profit/loss percentage
+                const plPercentCell = row.querySelector('.holding-profit-loss-percent');
+                if (plPercentCell) {
+                    const plPercent = holding.profit_loss_percent;
+                    plPercentCell.className = 'holding-profit-loss-percent ' + (plPercent >= 0 ? 'text-success' : 'text-danger');
+                    plPercentCell.innerHTML = `<strong>${plPercent.toFixed(2)}%</strong>`;
+                }
+                
+                // Accumulate totals
+                totalValue += holding.total_value;
+                totalProfitLoss += holding.profit_loss;
+                totalCost += (holding.avg_price * holding.quantity);
+            }
+        });
+        
+        // Update portfolio totals
+        const totalValueCell = document.getElementById('portfolio-total-value');
+        if (totalValueCell) {
+            totalValueCell.innerHTML = `<strong>$${totalValue.toFixed(2)}</strong>`;
+        }
+        
+        const totalPLCell = document.getElementById('portfolio-total-pl');
+        if (totalPLCell) {
+            totalPLCell.className = totalProfitLoss >= 0 ? 'text-success' : 'text-danger';
+            const icon = totalProfitLoss >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+            totalPLCell.innerHTML = `<i class="fas ${icon} mr-1" id="portfolio-pl-icon"></i><strong>$${Math.abs(totalProfitLoss).toFixed(2)}</strong>`;
+        }
+        
+        const totalPLPercentCell = document.getElementById('portfolio-total-pl-percent');
+        if (totalPLPercentCell && totalCost > 0) {
+            const totalPLPercent = (totalProfitLoss / totalCost) * 100;
+            totalPLPercentCell.className = totalPLPercent >= 0 ? 'text-success' : 'text-danger';
+            totalPLPercentCell.innerHTML = `<strong>${totalPLPercent.toFixed(2)}%</strong>`;
+        }
+        
+        // Update timestamp
+        const now = new Date();
+        const timeString = now.toLocaleTimeString();
+        console.log('Holdings updated at:', timeString);
+    });
+</script>
 {% endblock %}

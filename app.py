@@ -24,13 +24,23 @@ from google_auth_oauthlib.flow import Flow
 from google.auth.transport import requests as google_requests
 import requests
 from flask.sessions import SecureCookieSessionInterface
+from flask_socketio import SocketIO, emit
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
 app = Flask(__name__)
-app.secret_key = secrets.token_hex(16)
+# Use environment variable for secret key, fallback to generated one for development
+app.secret_key = os.getenv('SECRET_KEY', secrets.token_hex(16))
+
+# Initialize SocketIO
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
 # Configure session
 app.config.update(
-    SECRET_KEY='your_secret_key',  # In production, use a strong secret key from environment variables
-    SESSION_COOKIE_SECURE=False,   # Set to True in production with HTTPS
+    SECRET_KEY=os.getenv('SECRET_KEY', secrets.token_hex(16)),
+    SESSION_COOKIE_SECURE=os.getenv('SESSION_COOKIE_SECURE', 'False').lower() == 'true',  # Set to True in production with HTTPS
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
     PERMANENT_SESSION_LIFETIME=timedelta(days=1)  # Session expires after 1 day
@@ -39,43 +49,63 @@ app.config.update(
 
 
 # Google OAuth Configuration
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'  # Remove in production
-GOOGLE_CLIENT_ID = '255034053753-mpv519khm8tbltnr342fg68312dloau3.apps.googleusercontent.com'
-GOOGLE_CLIENT_SECRET = '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'
+# Only set OAUTHLIB_INSECURE_TRANSPORT for local development
+if os.getenv('FLASK_ENV') == 'development' or os.getenv('OAUTHLIB_INSECURE_TRANSPORT') == '1':
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+
+# Load Google OAuth credentials from environment variables
+GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
+GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
 GOOGLE_DISCOVERY_URL = 'https://accounts.google.com/.well-known/openid-configuration'
 
+# Validate that required OAuth credentials are present
+if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
+    print("⚠️  WARNING: GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET not set in environment variables.")
+    print("   Google OAuth login will not work. Please set these in your .env file.")
+
 # Initialize the OAuth flow
-client_config = {
-    "web": {
-        "client_id": GOOGLE_CLIENT_ID,
-        "client_secret": GOOGLE_CLIENT_SECRET,
-        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-        "token_uri": "https://oauth2.googleapis.com/token",
-        "redirect_uris": [
-            "http://localhost:5001/login/google/authorized",
-            "http://127.0.0.1:5001/login/google/authorized"
-        ]
+# Only create client_config if credentials are available
+if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
+    client_config = {
+        "web": {
+            "client_id": GOOGLE_CLIENT_ID,
+            "client_secret": GOOGLE_CLIENT_SECRET,
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "redirect_uris": [
+                "http://localhost:5001/login/google/authorized",
+                "http://127.0.0.1:5001/login/google/authorized",
+                os.getenv('GOOGLE_REDIRECT_URI', 'http://127.0.0.1:5001/login/google/authorized')
+            ]
+        }
     }
-}
+else:
+    client_config = None
 
 # Make sure the redirect URI is consistent
 def get_google_redirect_uri():
-    return 'http://127.0.0.1:5001/login/google/authorized'  # Use the same as in Google Cloud Console
+    # Allow redirect URI to be configured via environment variable
+    return os.getenv('GOOGLE_REDIRECT_URI', 'http://127.0.0.1:5001/login/google/authorized')
 
 def get_google_provider_cfg():
     return requests.get(GOOGLE_DISCOVERY_URL).json()
 
-# MySQL configuration
-app.config['MYSQL_HOST'] = '127.0.0.1'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'yui1987'
-app.config['MYSQL_DB'] = 'trading_website'
+# MySQL configuration - Load from environment variables
+app.config['MYSQL_HOST'] = os.getenv('MYSQL_HOST', '127.0.0.1')
+app.config['MYSQL_USER'] = os.getenv('MYSQL_USER', 'root')
+app.config['MYSQL_PASSWORD'] = os.getenv('MYSQL_PASSWORD')
+app.config['MYSQL_DB'] = os.getenv('MYSQL_DB', 'trading_website')
 app.config['pymysql_kwargs'] = {
-    "user": "root",
-    "password": "yui1987",
-    "db": "trading_website",
-    "host": "127.0.0.1"
+    "user": os.getenv('MYSQL_USER', 'root'),
+    "password": os.getenv('MYSQL_PASSWORD'),
+    "db": os.getenv('MYSQL_DB', 'trading_website'),
+    "host": os.getenv('MYSQL_HOST', '127.0.0.1')
 }
+
+# Validate that required database credentials are present
+if not app.config['MYSQL_PASSWORD']:
+    print("⚠️  WARNING: MYSQL_PASSWORD not set in environment variables.")
+    print("   Database connection will fail. Please set this in your .env file.")
 
 
 
@@ -125,6 +155,11 @@ def login():
 # Google OAuth login route
 @app.route('/login/google')
 def google_login():
+    # Check if OAuth credentials are configured
+    if not client_config or not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
+        flash('Google OAuth is not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in your .env file.', 'danger')
+        return redirect(url_for('login'))
+    
     # Generate a new state token for this request
     state = secrets.token_urlsafe(16)
     session['oauth_state'] = state  # Store in session
@@ -153,6 +188,11 @@ def google_login():
 # Google OAuth callback route
 @app.route('/login/google/authorized')
 def google_authorized():
+    # Check if OAuth credentials are configured
+    if not client_config or not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
+        flash('Google OAuth is not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in your .env file.', 'danger')
+        return redirect(url_for('login'))
+    
     print("\n=== Google OAuth Callback ===")
     print(f"Session state: {session.get('oauth_state')}")
     print(f"Request state: {request.args.get('state')}")
@@ -929,5 +969,206 @@ def trade_log():
 
 # Option chain functionality has been removed
 
+# ============================================
+# WebSocket Real-Time Price Updates
+# ============================================
+
+# Store active connections and their symbols
+active_connections = {}
+
+@socketio.on('connect')
+def handle_connect():
+    """Handle client connection"""
+    print(f'Client connected: {request.sid}')
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    """Handle client disconnection"""
+    if request.sid in active_connections:
+        del active_connections[request.sid]
+    print(f'Client disconnected: {request.sid}')
+
+@socketio.on('subscribe_watchlist')
+def handle_subscribe_watchlist(data):
+    """Subscribe to watchlist price updates"""
+    user_id = data.get('user_id')
+    if not user_id:
+        return
+    
+    # Store the subscription
+    active_connections[request.sid] = {
+        'user_id': user_id,
+        'type': 'watchlist'
+    }
+    print(f'Client {request.sid} subscribed to watchlist for user {user_id}')
+
+@socketio.on('subscribe_holdings')
+def handle_subscribe_holdings(data):
+    """Subscribe to holdings price updates"""
+    user_id = data.get('user_id')
+    if not user_id:
+        return
+    
+    # Store the subscription
+    active_connections[request.sid] = {
+        'user_id': user_id,
+        'type': 'holdings'
+    }
+    print(f'Client {request.sid} subscribed to holdings for user {user_id}')
+
+def get_stock_prices(symbols):
+    """Fetch current prices for multiple stocks"""
+    prices = {}
+    indices = ['^NSEI', '^IXIC', '^DJI', '^BSESN']
+    
+    for symbol in symbols:
+        try:
+            ticker = yf.Ticker(symbol)
+            
+            # For indices, get 3 days of data
+            if symbol in indices:
+                hist = ticker.history(period='3d')
+            else:
+                hist = ticker.history(period='2d')
+            
+            if len(hist) >= 2:
+                prev_close = hist['Close'].iloc[-2]
+                current_price = hist['Close'].iloc[-1]
+                change = current_price - prev_close
+                change_percent = (change / prev_close) * 100
+                
+                prices[symbol] = {
+                    'price': round(float(current_price), 2),
+                    'change': round(float(change), 2),
+                    'change_percent': round(float(change_percent), 2)
+                }
+            else:
+                prices[symbol] = {
+                    'price': 'N/A',
+                    'change': 'N/A',
+                    'change_percent': 'N/A'
+                }
+        except Exception as e:
+            print(f"Error fetching price for {symbol}: {e}")
+            prices[symbol] = {
+                'price': 'N/A',
+                'change': 'N/A',
+                'change_percent': 'N/A'
+            }
+    
+    return prices
+
+def background_price_updater():
+    """Background task to push price updates to connected clients"""
+    print("Starting background price updater...")
+    
+    while True:
+        try:
+            if active_connections:
+                print(f"[Background Task] Active connections: {len(active_connections)}")
+                with app.app_context():
+                    # Get unique user IDs
+                    user_ids = set()
+                    for conn_data in active_connections.values():
+                        user_ids.add(conn_data['user_id'])
+                    
+                    print(f"[Background Task] Fetching data for {len(user_ids)} user(s)")
+                    
+                    # Fetch data for each user
+                    for user_id in user_ids:
+                        cursor = mysql.connection.cursor()
+                        
+                        # Get watchlist stocks for this user
+                        cursor.execute("SELECT stock_symbol FROM watchlist WHERE user_id = %s", [user_id])
+                        watchlist = [row[0] for row in cursor.fetchall()]
+                        print(f"[Background Task] User {user_id} watchlist: {watchlist}")
+                        
+                        # Get holdings stocks for this user
+                        cursor.execute("SELECT stock_symbol, action, quantity, price FROM trade_log WHERE user_id = %s", [user_id])
+                        trades = cursor.fetchall()
+                        print(f"[Background Task] User {user_id} trades: {len(trades)} trades")
+                    
+                        holdings = {}
+                        for stock_symbol, action, quantity, price in trades:
+                            if stock_symbol not in holdings:
+                                holdings[stock_symbol] = {'quantity': 0, 'total_cost': 0}
+                            
+                            if action == 'BUY':
+                                holdings[stock_symbol]['quantity'] += quantity
+                                holdings[stock_symbol]['total_cost'] += quantity * float(price)
+                            elif action == 'SELL':
+                                holdings[stock_symbol]['quantity'] -= quantity
+                                holdings[stock_symbol]['total_cost'] -= quantity * float(price)
+                        
+                        holdings = {symbol: data for symbol, data in holdings.items() if data['quantity'] > 0}
+                        holdings_symbols = list(holdings.keys())
+                        
+                        # Fetch prices for watchlist
+                        if watchlist:
+                            indices = ['^NSEI', '^IXIC', '^DJI', '^BSESN']
+                            all_watchlist_symbols = list(set(watchlist + indices))
+                            print(f"[Background Task] Fetching prices for: {all_watchlist_symbols}")
+                            watchlist_prices = get_stock_prices(all_watchlist_symbols)
+                            print(f"[Background Task] Fetched {len(watchlist_prices)} prices")
+                            
+                            # Emit to clients subscribed to watchlist
+                            emitted_count = 0
+                            for sid, conn_data in list(active_connections.items()):
+                                if conn_data['user_id'] == user_id and conn_data['type'] == 'watchlist':
+                                    socketio.emit('price_update', {
+                                        'prices': watchlist_prices,
+                                        'timestamp': datetime.now().isoformat()
+                                    }, room=sid)
+                                    emitted_count += 1
+                            print(f"[Background Task] Emitted price updates to {emitted_count} client(s)")
+                        
+                        # Fetch prices for holdings
+                        if holdings_symbols:
+                            holdings_prices = get_stock_prices(holdings_symbols)
+                            
+                            # Calculate P/L for each holding
+                            holdings_data = []
+                            for symbol in holdings_symbols:
+                                if holdings_prices[symbol]['price'] != 'N/A':
+                                    avg_price = holdings[symbol]['total_cost'] / holdings[symbol]['quantity']
+                                    current_price = holdings_prices[symbol]['price']
+                                    quantity = holdings[symbol]['quantity']
+                                    total_value = current_price * quantity
+                                    profit_loss = total_value - (avg_price * quantity)
+                                    profit_loss_percent = (profit_loss / (avg_price * quantity)) * 100
+                                    
+                                    holdings_data.append({
+                                        'symbol': symbol,
+                                        'quantity': quantity,
+                                        'avg_price': round(avg_price, 2),
+                                        'current_price': current_price,
+                                        'total_value': round(total_value, 2),
+                                        'profit_loss': round(profit_loss, 2),
+                                        'profit_loss_percent': round(profit_loss_percent, 2)
+                                    })
+                            
+                            # Emit to clients subscribed to holdings
+                            for sid, conn_data in list(active_connections.items()):
+                                if conn_data['user_id'] == user_id and conn_data['type'] == 'holdings':
+                                    socketio.emit('holdings_update', {
+                                        'holdings': holdings_data,
+                                        'timestamp': datetime.now().isoformat()
+                                    }, room=sid)
+                        
+                        cursor.close()
+            
+            # Update every 10 seconds (adjust as needed)
+            socketio.sleep(10)
+            
+        except Exception as e:
+            print(f"Error in background updater: {e}")
+            socketio.sleep(10)
+
 if __name__ == '__main__':
-    app.run(debug=True, port=5001, use_reloader=False)
+    # Start background task
+    print("Initializing WebSocket server...")
+    socketio.start_background_task(background_price_updater)
+    
+    # Use socketio.run instead of app.run
+    print("Starting server on http://127.0.0.1:5001")
+    socketio.run(app, debug=True, port=5001, allow_unsafe_werkzeug=True)

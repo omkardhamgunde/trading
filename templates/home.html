@@ -16,11 +16,11 @@
                     </p>
                     <div class="d-flex gap-3 justify-content-lg-start justify-content-center">
                         {% if 'user_id' in session %}
-                        <a href="{{ url_for('watchlist') }}" class="btn btn-primary btn-lg animate-button">
+                        <a href="{{ url_for('watchlist.watchlist') }}" class="btn btn-primary btn-lg animate-button">
                             Go to Watchlist
                         </a>
                         {% else %}
-                        <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg animate-button">
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg animate-button">
                             Get Started
                         </a>
                         <a href="#features" class="btn btn-outline-secondary btn-lg animate-button">

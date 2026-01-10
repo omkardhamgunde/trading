@@ -71,7 +71,7 @@
         <div class="row mt-4">
             <div class="col">
                 <div class="d-flex justify-content-end">
-                    <form action="{{ url_for('clear_trade_log') }}" method="POST" 
+                    <form action="{{ url_for('trading.clear_trade_log') }}" method="POST" 
                           onsubmit="return confirm('Are you sure you want to clear your entire trade log? This action cannot be undone.');">
                         <button type="submit" class="btn btn-danger">
                             <i class="fas fa-trash-alt me-2"></i>Clear Trade Log

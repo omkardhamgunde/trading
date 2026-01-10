@@ -28,27 +28,27 @@
                 <ul class="navbar-nav">
                     {% if 'user_id' in session %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'watchlist' %}active{% endif %}" href="{{ url_for('watchlist') }}">Watchlist</a>
+                            <a class="nav-link {% if request.endpoint == 'watchlist.watchlist' %}active{% endif %}" href="{{ url_for('watchlist.watchlist') }}">Watchlist</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'holdings' %}active{% endif %}" href="{{ url_for('holdings') }}">Holdings</a>
+                            <a class="nav-link {% if request.endpoint == 'holdings.holdings' %}active{% endif %}" href="{{ url_for('holdings.holdings') }}">Holdings</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'trade_log' %}active{% endif %}" href="{{ url_for('trade_log') }}">Trade Log</a>
+                            <a class="nav-link {% if request.endpoint == 'trading.trade_log' %}active{% endif %}" href="{{ url_for('trading.trade_log') }}">Trade Log</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'wallet' %}active{% endif %}" href="{{ url_for('wallet') }}">Wallet</a>
+                            <a class="nav-link {% if request.endpoint == 'wallet.wallet' %}active{% endif %}" href="{{ url_for('wallet.wallet') }}">Wallet</a>
                         </li>
                     {% endif %}
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     {% if 'user_id' in session %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                            <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link {% if request.endpoint == 'login' %}active{% endif %}" href="{{ url_for('login') }}">Login</a>
+                            <a class="nav-link {% if request.endpoint == 'auth.login' %}active{% endif %}" href="{{ url_for('auth.login') }}">Login</a>
                         </li>
                     {% endif %}
                 </ul>

@@ -1,8 +1,5 @@
-"""
-Watchlist routes.
-"""
 from flask import Blueprint, request, redirect, session, flash, render_template, url_for, jsonify
-from services.stock_service import search_stocks, get_stock_prices
+from services.stock_service import search_stocks, get_stock_prices, get_available_markets, get_heatmap_data
 
 watchlist_bp = Blueprint('watchlist', __name__)
 
@@ -15,10 +12,27 @@ def init_watchlist_routes(mysql):
 
 @watchlist_bp.route('/search_stocks')
 def search_stocks_route():
-    """Search for stocks by name or symbol."""
+    """Search for stocks by name or symbol, optionally filtered by market/category."""
     query = request.args.get('q', '').strip()
-    results = search_stocks(query)
+    market = request.args.get('market', '').strip().lower() or None
+    category = request.args.get('category', '').strip().lower() or None
+    results = search_stocks(query, market=market, category=category)
     return jsonify(results)
+
+
+@watchlist_bp.route('/screener')
+def screener():
+    """Render the Market Screener & Heatmap page."""
+    market = request.args.get('market', 'india').strip().lower()
+    
+    # If the request wants JSON data (AJAX update for the chart)
+    if request.headers.get('Accept') == 'application/json':
+        data = get_heatmap_data(market)
+        return jsonify(data)
+        
+    # Initial page load with default market
+    initial_data = get_heatmap_data(market)
+    return render_template('screener.html', initial_data=initial_data, current_market=market)
 
 
 @watchlist_bp.route('/watchlist', methods=['GET', 'POST'])

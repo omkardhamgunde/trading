@@ -6,11 +6,13 @@ from flask_pymysql import MySQL
 from forms import LoginForm
 from config import Config
 import secrets
+import logging
 from google.oauth2 import id_token
 from google_auth_oauthlib.flow import Flow
 from google.auth.transport import requests as google_requests
 
 auth_bp = Blueprint('auth', __name__)
+logger = logging.getLogger(__name__)
 
 
 def init_auth_routes(mysql, client_config, google_client_id, google_client_secret):
@@ -70,7 +72,6 @@ def google_login():
     state = secrets.token_urlsafe(16)
     session['oauth_state'] = state
     session.modified = True
-    print(f"Setting oauth_state in session: {state}")
     
     # Create flow instance
     flow = Flow.from_client_config(
@@ -99,9 +100,7 @@ def google_authorized():
         flash('Google OAuth is not configured. Please set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in your .env file.', 'danger')
         return redirect(url_for('auth.login'))
     
-    print("\n=== Google OAuth Callback ===")
-    print(f"Session state: {session.get('oauth_state')}")
-    print(f"Request state: {request.args.get('state')}")
+    # OAuth callback received (no need to log details)
     
     # Get the state from the session and request
     session_state = session.pop('oauth_state', None)
@@ -110,13 +109,13 @@ def google_authorized():
     # Verify the state parameter to prevent CSRF
     if not session_state or not request_state or session_state != request_state:
         error_msg = f"Invalid state parameter. Session state: {session_state}, Request state: {request_state}"
-        print(error_msg)
+        logger.warning(error_msg)
         flash('Invalid state parameter. Please try logging in again.', 'danger')
         return redirect(url_for('auth.login'))
     
     # Get the authorization code from the response
     code = request.args.get('code')
-    print(f"Got authorization code: {code[:10]}..." if code else "No code received")
+    # Authorization code received (no need to log)
     
     # Exchange the authorization code for tokens
     try:
@@ -126,11 +125,8 @@ def google_authorized():
         )
         
         flow.redirect_uri = Config.GOOGLE_REDIRECT_URI
-        print(f"Using redirect_uri: {flow.redirect_uri}")
-        
         flow.fetch_token(code=code)
         credentials = flow.credentials
-        print("Successfully obtained credentials")
         
         idinfo = id_token.verify_oauth2_token(
             credentials._id_token,
@@ -138,18 +134,17 @@ def google_authorized():
             auth_bp.google_client_id,
             clock_skew_in_seconds=5
         )
-        print(f"Decoded ID token: {idinfo}")
         
         # Get user info
         google_id = idinfo.get('sub')
         email = idinfo.get('email')
         name = idinfo.get('name')
         
-        print(f"User info - Google ID: {google_id}, Email: {email}, Name: {name}")
+        logger.info(f"OAuth login - Email: {email}, Name: {name}")
         
         if not email:
             error_msg = 'Could not get email from Google'
-            print(error_msg)
+            logger.error(error_msg)
             flash(error_msg, 'danger')
             return redirect(url_for('auth.login'))
         
@@ -158,8 +153,6 @@ def google_authorized():
         # Check if user exists by email or google_id
         cursor.execute("SELECT * FROM users WHERE email = %s OR google_id = %s", (email, google_id))
         user = cursor.fetchone()
-        print(f"Existing user from DB: {user}")
-        
         if not user:
             # Create new user
             username = email.split('@')[0]
@@ -168,15 +161,13 @@ def google_authorized():
             if cursor.fetchone():
                 username = f"{username}_{secrets.token_hex(4)}"
             
-            print(f"Creating new user with username: {username}, email: {email}")
-            
             # Insert new user
             cursor.execute(
                 "INSERT INTO users (username, email, google_id) VALUES (%s, %s, %s)",
                 (username, email, google_id)
             )
             user_id = cursor.lastrowid
-            print(f"New user created with ID: {user_id}")
+            logger.info(f"New user created - ID: {user_id}, Email: {email}")
             
             # Create wallet for new user
             cursor.execute(
@@ -188,10 +179,8 @@ def google_authorized():
             flash('Account created successfully!', 'success')
         else:
             user_id = user[0]
-            print(f"Found existing user with ID: {user_id}")
             # Update Google ID if not set
             if not user[3]:
-                print(f"Updating Google ID for user {user_id}")
                 cursor.execute("UPDATE users SET google_id = %s WHERE id = %s", (google_id, user_id))
                 auth_bp.mysql.connection.commit()
         
@@ -200,12 +189,12 @@ def google_authorized():
         session['user_id'] = user_id
         session['google_token'] = credentials._id_token
         
-        print(f"Session after login: {dict(session)}")
+        logger.info(f"User {user_id} logged in successfully")
         flash('Logged in with Google successfully!', 'success')
         return redirect(url_for('watchlist.watchlist'))
         
     except Exception as e:
-        print(f"Error during Google OAuth: {str(e)}")
+        logger.error(f"Error during Google OAuth: {e}", exc_info=True)
         flash('Failed to log in with Google. Please try again.', 'danger')
         return redirect(url_for('auth.login'))
 

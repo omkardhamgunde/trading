@@ -3,11 +3,16 @@ Trade service for trade execution and validation.
 """
 import yfinance as yf
 from datetime import datetime
+import logging
+import time
+from utils.metrics import metrics_tracker
+
+logger = logging.getLogger(__name__)
 
 
 def get_current_stock_price(symbol):
     """
-    Get current stock price.
+    Get current stock price with metrics tracking.
     
     Args:
         symbol: Stock symbol
@@ -15,13 +20,23 @@ def get_current_stock_price(symbol):
     Returns:
         Current price as float, or None if error
     """
+    start_time = time.time()
     try:
         stock_data = yf.Ticker(symbol).history(period='1d')
         if len(stock_data) == 0:
+            metrics_tracker.record_api_call()
             return None
-        return float(stock_data['Close'].iloc[-1])
+        
+        price = float(stock_data['Close'].iloc[-1])
+        
+        # Record API call with duration
+        duration_ms = (time.time() - start_time) * 1000
+        metrics_tracker.record_api_call(duration_ms)
+        
+        return price
     except Exception as e:
-        print(f"Error fetching stock price: {e}")
+        logger.error(f"Error fetching stock price for {symbol}: {e}", exc_info=True)
+        metrics_tracker.record_api_call()
         return None
 
 
@@ -119,5 +134,5 @@ def execute_trade(mysql, user_id, symbol, action, quantity, price):
         
     except Exception as e:
         mysql.connection.rollback()
-        print(f"Trade execution failed: {e}")
+        logger.error(f"Trade execution failed: {e}", exc_info=True)
         return False, str(e)

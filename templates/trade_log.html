@@ -1,188 +1,281 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="dashboard-container">
-    <div class="row mb-4">
-        <div class="col">
-            <h2>Trade Log</h2>
-            <p class="text-muted">Your complete trading history</p>
-        </div>
+<div class="trade-log-container">
+    <div class="page-header mb-4">
+        <h1 class="page-title"><i class="fas fa-history me-2"></i>Trade Log</h1>
+        <p class="page-subtitle">Your complete trading history and transaction records</p>
     </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                <div class="alert-modern alert-{{ category }} alert-dismissible fade show" role="alert">
+                    <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %} me-2"></i>
                     {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             {% endfor %}
         {% endif %}
     {% endwith %}
 
-    <div class="card">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead>
-                        <tr>
-                            <th scope="col">Stock</th>
-                            <th scope="col">Action</th>
-                            <th scope="col">Quantity</th>
-                            <th scope="col">Price</th>
-                            <th scope="col">Total Value</th>
-                            <th scope="col">Date & Time</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% if trades %}
-                            {% for trade in trades %}
-                                <tr>
-                                    <td>
-                                        <strong>{{ trade[0] }}</strong>
-                                    </td>
-                                    <td>
-                                        <span class="badge {% if trade[1] == 'buy' %}bg-success{% else %}bg-danger{% endif %}">
-                                            {{ trade[1]|upper }}
-                                        </span>
-                                    </td>
-                                    <td>{{ trade[2] }}</td>
-                                    <td>${{ "%.2f"|format(trade[3]) }}</td>
-                                    <td>${{ "%.2f"|format(trade[2] * trade[3]) }}</td>
-                                    <td>{{ trade[4].strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                                </tr>
-                            {% endfor %}
-                        {% else %}
+    <div class="trade-log-card">
+        <div class="table-container">
+            <table class="trade-log-table">
+                <thead>
+                    <tr>
+                        <th><i class="fas fa-building me-2"></i>Stock</th>
+                        <th><i class="fas fa-exchange-alt me-2"></i>Action</th>
+                        <th><i class="fas fa-boxes me-2"></i>Quantity</th>
+                        <th><i class="fas fa-dollar-sign me-2"></i>Price</th>
+                        <th><i class="fas fa-calculator me-2"></i>Total Value</th>
+                        <th><i class="fas fa-calendar-alt me-2"></i>Date & Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if trades %}
+                        {% for trade in trades %}
                             <tr>
-                                <td colspan="6" class="text-center py-4">
-                                    <div class="text-muted">
-                                        <i class="fas fa-info-circle me-2"></i>No trades found
+                                <td>
+                                    <div class="stock-info">
+                                        <i class="fas fa-building me-2"></i>
+                                        <strong>{{ trade[0] }}</strong>
                                     </div>
                                 </td>
+                                <td>
+                                    <span class="badge-modern {% if trade[1] == 'buy' %}badge-buy{% else %}badge-sell{% endif %}">
+                                        <i class="fas {% if trade[1] == 'buy' %}fa-arrow-up{% else %}fa-arrow-down{% endif %} me-1"></i>
+                                        {{ trade[1]|upper }}
+                                    </span>
+                                </td>
+                                <td class="quantity-cell">{{ trade[2] }}</td>
+                                <td class="price-cell">${{ "%.2f"|format(trade[3]) }}</td>
+                                <td class="total-cell">${{ "%.2f"|format(trade[2] * trade[3]) }}</td>
+                                <td class="date-cell">
+                                    <i class="fas fa-clock me-2 text-muted"></i>
+                                    {{ trade[4].strftime('%Y-%m-%d %H:%M:%S') }}
+                                </td>
                             </tr>
-                        {% endif %}
-                    </tbody>
-                </table>
-            </div>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center-empty">
+                                <i class="fas fa-inbox fa-3x mb-3 text-muted"></i>
+                                <p class="text-muted">No trades found. Start trading to see your history here!</p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
         </div>
     </div>
 
     {% if trades %}
-        <div class="row mt-4">
-            <div class="col">
-                <div class="d-flex justify-content-end">
-                    <form action="{{ url_for('trading.clear_trade_log') }}" method="POST" 
-                          onsubmit="return confirm('Are you sure you want to clear your entire trade log? This action cannot be undone.');">
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash-alt me-2"></i>Clear Trade Log
-                        </button>
-                    </form>
-                </div>
-            </div>
+        <div class="action-bar">
+            <form action="{{ url_for('trading.clear_trade_log') }}" method="POST" 
+                  onsubmit="return confirm('⚠️ Are you sure you want to clear your entire trade log? This action cannot be undone.');">
+                <button type="submit" class="btn-modern btn-danger-modern">
+                    <i class="fas fa-trash-alt me-2"></i>Clear Trade Log
+                </button>
+            </form>
         </div>
     {% endif %}
-
-    <!-- Add Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
-    <!-- Custom styles -->
-    <style>
-        body {
-            background-color: #000000;
-            color: #ffffff;
-            font-size: 18px;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        }
-
-        .dashboard-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-
-        h2 {
-            font-size: 1.25rem;
-            border-bottom: 1px solid #333333;
-            padding-bottom: 0.5rem;
-            margin-bottom: 1rem;
-            color: #ffffff;
-        }
-
-        .card {
-            background: #1a1a1a;
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 6px -1px rgba(255, 255, 255, 0.1);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            color: #ffffff;
-        }
-
-        .table thead th {
-            background-color: #2d2d2d;
-            color: #ffffff;
-            padding: 1rem;
-        }
-
-        .table td {
-            padding: 1rem;
-            vertical-align: middle;
-            color: #ffffff;
-        }
-
-        .table tbody tr {
-            background-color: #1a1a1a;
-            transition: all 0.3s ease;
-        }
-
-        .table tbody tr:hover {
-            background-color: #444444;
-            transform: translateY(-2px);
-        }
-
-        .table tbody tr:hover td {
-            color: #ffffff !important;
-        }
-
-        .badge.bg-success {
-            background-color: #38a169 !important;
-        }
-
-        .badge.bg-danger {
-            background-color: #e53e3e !important;
-        }
-
-        .btn-danger {
-            background-color: #e53e3e;
-            border-color: #e53e3e;
-            padding: 0.75rem 1.5rem;
-            font-size: 1.125rem;
-            font-weight: 500;
-        }
-
-        .btn-danger:hover {
-            background-color: #c53030;
-            border-color: #c53030;
-        }
-
-        .alert {
-            background-color: #2d2d2d;
-            color: #ffffff;
-            border: 1px solid #444444;
-        }
-
-        .text-muted {
-            color: #a0a0a0 !important;
-        }
-
-        .text-center.py-4 {
-            font-size: 1.25rem;
-            color: #ffffff;
-        }
-
-        .text-center.py-4 i {
-            font-size: 1.5rem;
-            margin-right: 0.5rem;
-        }
-    </style>
 </div>
+
+<style>
+    .trade-log-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-subtitle {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 1.1rem;
+    }
+
+    .trade-log-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+
+    .table-container {
+        overflow-x: auto;
+    }
+
+    .trade-log-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .trade-log-table thead th {
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 600;
+        padding: 1.25rem 1rem;
+        text-align: left;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .trade-log-table tbody tr {
+        background: rgba(255, 255, 255, 0.02);
+        transition: all 0.3s ease;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .trade-log-table tbody tr:hover {
+        background: rgba(255, 255, 255, 0.08);
+        transform: scale(1.01);
+    }
+
+    .trade-log-table tbody td {
+        padding: 1.25rem 1rem;
+        color: rgba(255, 255, 255, 0.9);
+        vertical-align: middle;
+    }
+
+    .stock-info {
+        display: flex;
+        align-items: center;
+        font-size: 1.1rem;
+    }
+
+    .stock-info i {
+        color: rgba(102, 126, 234, 0.8);
+    }
+
+    .badge-modern {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .badge-buy {
+        background: rgba(16, 185, 129, 0.2);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .badge-sell {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .quantity-cell,
+    .price-cell,
+    .total-cell {
+        font-family: 'Monaco', 'Courier New', monospace;
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+
+    .date-cell {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.95rem;
+    }
+
+    .text-center-empty {
+        padding: 4rem 2rem;
+        text-align: center;
+    }
+
+    .text-muted {
+        color: rgba(255, 255, 255, 0.5) !important;
+    }
+
+    .action-bar {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 2rem;
+    }
+
+    .btn-modern {
+        padding: 0.875rem 1.75rem;
+        border: none;
+        border-radius: 0.75rem;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-danger-modern {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-danger-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+    }
+
+    .alert-modern {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 1rem;
+        padding: 1rem 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        color: #ffffff;
+    }
+
+    .alert-success {
+        border-color: rgba(16, 185, 129, 0.3);
+        background: rgba(16, 185, 129, 0.1);
+    }
+
+    .alert-danger {
+        border-color: rgba(239, 68, 68, 0.3);
+        background: rgba(239, 68, 68, 0.1);
+    }
+
+    @media (max-width: 768px) {
+        .trade-log-container {
+            padding: 1rem;
+        }
+
+        .trade-log-table {
+            font-size: 0.9rem;
+        }
+
+        .trade-log-table thead th,
+        .trade-log-table tbody td {
+            padding: 0.75rem 0.5rem;
+        }
+    }
+</style>
 {% endblock %}

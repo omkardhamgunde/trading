@@ -3,6 +3,10 @@
 # Environment variables - NEVER commit .env file
 .env
 
+# Logs
+logs/
+*.log
+
 # Python
 __pycache__/
 *.py[cod]

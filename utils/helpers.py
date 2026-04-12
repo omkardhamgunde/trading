@@ -3,6 +3,9 @@ Helper utility functions.
 """
 import pytz
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def crossover(series1, series2):
@@ -16,11 +19,11 @@ def validate_dates(data):
     latest_date = data.index[-1].date()
     
     if latest_date > now:
-        print(f"⚠️ Data anomaly: Future date {latest_date} detected")
+        logger.warning(f"Data anomaly: Future date {latest_date} detected")
         return False
         
     if data.index[0].date() > now:
-        print(f"⚠️ Data anomaly: Start date {data.index[0].date()} is in future")
+        logger.warning(f"Data anomaly: Start date {data.index[0].date()} is in future")
         return False
         
     return True

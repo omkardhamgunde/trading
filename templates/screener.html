@@ -1,0 +1,413 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="screener-container fade-in-up">
+    <!-- Header Page Description -->
+    <div class="page-header mb-4 text-center">
+        <h1 class="page-title"><i class="fas fa-th-large me-2"></i>Market Heatmap</h1>
+        <p class="page-subtitle">Real-time market categorization visualized by volume & performance</p>
+    </div>
+
+    <!-- Market Selectors -->
+    <div class="market-selectors text-center mb-4">
+        <div class="btn-group" role="group" aria-label="Market selection">
+            <button type="button" class="btn btn-glass active market-btn" data-market="india">
+                <i class="fas fa-rupee-sign me-2"></i>India (NSE)
+            </button>
+            <button type="button" class="btn btn-glass market-btn" data-market="usa">
+                <i class="fas fa-dollar-sign me-2"></i>United States (US)
+            </button>
+            <button type="button" class="btn btn-glass market-btn" data-market="crypto">
+                <i class="fab fa-bitcoin me-2"></i>Cryptocurrency
+            </button>
+        </div>
+    </div>
+
+    <!-- The actual Heatmap Container -->
+    <div class="heatmap-card">
+        <div class="loading-overlay d-none" id="loadingOverlay">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3 glow-text">Analyzing Market Data...</p>
+        </div>
+        <div id="heatmapChart"></div>
+    </div>
+</div>
+
+<style>
+    .screener-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 1rem 0;
+        min-height: 80vh;
+    }
+
+    /* Page Header */
+    .page-title {
+        font-weight: 800;
+        font-size: 2.5rem;
+        letter-spacing: -1px;
+        background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.5rem;
+        display: inline-block;
+    }
+
+    .page-subtitle {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 1.1rem;
+        font-weight: 400;
+    }
+
+    /* Market Selector Buttons */
+    .btn-glass {
+        background: rgba(102, 126, 234, 0.1) !important;
+        border: 1px solid rgba(102, 126, 234, 0.2) !important;
+        color: rgba(255,255,255,0.7) !important;
+        backdrop-filter: blur(10px);
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-glass:hover {
+        background: rgba(102, 126, 234, 0.2) !important;
+        color: #fff !important;
+    }
+
+    .btn-glass.active {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.4) 0%, rgba(118, 75, 162, 0.4) 100%) !important;
+        border-color: rgba(102, 126, 234, 0.5) !important;
+        color: #fff !important;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+    }
+
+    /* Chart Container */
+    .heatmap-card {
+        background: rgba(20, 20, 35, 0.4);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 24px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1.5rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        position: relative;
+        min-height: 600px;
+        overflow: hidden;
+    }
+    
+    #heatmapChart {
+        width: 100%;
+        min-height: 550px;
+    }
+
+    /* Custom ApexCharts Tooltip Styles to match our dark theme */
+    .apexcharts-tooltip {
+        background: rgba(10, 10, 26, 0.95) !important;
+        backdrop-filter: blur(12px) !important;
+        border: 1px solid rgba(102, 126, 234, 0.4) !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+        border-radius: 12px !important;
+        color: white !important;
+    }
+    .apexcharts-tooltip-title {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+        font-weight: 700 !important;
+        font-family: 'Inter', sans-serif !important;
+    }
+    .apexcharts-tooltip-text {
+        font-family: 'Inter', sans-serif !important;
+    }
+    
+    /* Loading state */
+    .loading-overlay {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(10, 10, 26, 0.8);
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        border-radius: 24px;
+        backdrop-filter: blur(4px);
+    }
+    .glow-text {
+        color: #667eea;
+        text-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Add ApexCharts for the Treemap -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+<script>
+    // Data fed from backend initially
+    let currentData = {{ initial_data | tojson }};
+    let chart;
+    
+    // Function to determine color dynamically based on exact percentage change
+    // Dark Red for deep negative, bright Green for high positive
+    function getColorRanges() {
+        return [
+            { from: -100, to: -5, color: '#991b1b' }, // Deep red
+            { from: -5, to: -2, color: '#dc2626' },   // Red
+            { from: -2, to: -0.01, color: '#f87171' },// Light red
+            { from: -0.01, to: 0.01, color: '#64748b' }, // Gray/Neutral
+            { from: 0.01, to: 2, color: '#4ade80' },     // Light green
+            { from: 2, to: 5, color: '#16a34a' },        // Green
+            { from: 5, to: 100, color: '#166534' }       // Deep green
+        ];
+    }
+    
+    // Function to render or update the treemap chart
+    function renderChart(data) {
+        // Map the data into the exact format ApexCharts needs
+        // Apex charts treemap expects {x: name, y: size, fillColor: optional}
+        const seriesData = data.map(item => {
+            return {
+                x: item.x,
+                y: item.y,
+                // Passing extra data to show in custom tooltips
+                meta: {
+                    name: item.name,
+                    price: item.price,
+                    change: item.change_percent
+                }
+            };
+        });
+        
+        const options = {
+            series: [
+                {
+                    data: seriesData
+                }
+            ],
+            chart: {
+                type: 'treemap',
+                height: 550,
+                fontFamily: 'Inter, sans-serif',
+                background: 'transparent',
+                toolbar: { show: false },
+                animations: {
+                    enabled: true,
+                    easing: 'easeinout',
+                    speed: 800,
+                    animateGradually: {
+                        enabled: true,
+                        delay: 150
+                    },
+                    dynamicAnimation: {
+                        enabled: true,
+                        speed: 350
+                    }
+                }
+            },
+            plotOptions: {
+                treemap: {
+                    enableShades: true,
+                    shadeIntensity: 0.5,
+                    distributed: false,
+                    colorScale: {
+                        ranges: getColorRanges()
+                    }
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                style: {
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    colors: ['#ffffff']
+                },
+                formatter: function(text, op) {
+                    const price = op.value;
+                    const meta = seriesData[op.dataPointIndex].meta;
+                    const changeStr = meta.change >= 0 ? '+' + meta.change + '%' : meta.change + '%';
+                    // Display symbol and the change% directly inside the block
+                    return [text, changeStr]; 
+                }
+            },
+            stroke: {
+                show: true,
+                width: 2,
+                colors: ['#0a0a1a'] // Match our exact body background so lines blend
+            },
+            tooltip: {
+                custom: function({series, seriesIndex, dataPointIndex, w}) {
+                    const data = w.config.series[seriesIndex].data[dataPointIndex].meta;
+                    const size = w.config.series[seriesIndex].data[dataPointIndex].y;
+                    const isPositive = data.change >= 0;
+                    const colorClass = isPositive ? 'text-success' : 'text-danger';
+                    const sign = isPositive ? '+' : '';
+                    
+                    return `
+                        <div class="p-3">
+                            <h6 class="mb-1">${data.name} <span class="text-white-50 ms-1">(${w.globals.labels[dataPointIndex]})</span></h6>
+                            <hr class="my-2 border-secondary">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-white-50 me-4">Price</span>
+                                <span class="fw-bold">$${data.price}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-white-50">Change</span>
+                                <span class="fw-bold ${colorClass}">${sign}${data.change}%</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-white-50">Volume Index</span>
+                                <span class="fw-bold text-white">${size.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        };
+
+        if (chart) {
+            chart.destroy();
+        }
+        
+        chart = new ApexCharts(document.querySelector("#heatmapChart"), options);
+        chart.render();
+    }
+
+    // Initial render
+    document.addEventListener('DOMContentLoaded', () => {
+        // Pre-process initial data to assign color scales based on change_percent
+        // Because ApexCharts Treemap `colorScale` maps to `y` (size) by default, 
+        // we have to explicitly map our change_percent to the fillColor property
+        const processedData = currentData.map(item => {
+            // Find correct color
+            let bgColor = '#64748b'; // default neutral
+            const ranges = getColorRanges();
+            for (let r of ranges) {
+                if (item.change_percent >= r.from && item.change_percent <= r.to) {
+                    bgColor = r.color;
+                    break;
+                }
+            }
+            return {
+                ...item,
+                fillColor: bgColor
+            };
+        });
+
+        // We override the colorScale because we want size (y) independent of color (fillColor)
+        const finalOptions = {
+            series: [{ data: processedData.map(d => ({
+                x: d.x, 
+                y: d.y, 
+                fillColor: d.fillColor,
+                meta: { name: d.name, price: d.price, change: d.change_percent }
+            })) }],
+            chart: {
+                type: 'treemap',
+                height: 550,
+                fontFamily: 'Inter, sans-serif',
+                background: 'transparent',
+                toolbar: { show: false },
+                animations: { enabled: true, easing: 'easeinout', speed: 800 }
+            },
+            plotOptions: {
+                treemap: {
+                    distributed: true,
+                    enableShades: true,
+                }
+            },
+            dataLabels: {
+                enabled: true,
+                style: { fontSize: '13px', fontWeight: 600 },
+                formatter: function(text, op) {
+                    const data = op.w.config.series[op.seriesIndex].data[op.dataPointIndex].meta;
+                    return [text, (data.change >= 0 ? '+' : '') + data.change + '%'];
+                }
+            },
+            stroke: { show: true, width: 2, colors: ['#0a0a1a'] },
+            tooltip: {
+                theme: 'dark',
+                custom: function({series, seriesIndex, dataPointIndex, w}) {
+                    const data = w.config.series[seriesIndex].data[dataPointIndex].meta;
+                    const size = w.config.series[seriesIndex].data[dataPointIndex].y;
+                    const isPos = data.change >= 0;
+                    return `
+                        <div class="p-3" style="min-width: 200px;">
+                            <h6 class="mb-1">${data.name} <span class="text-white-50 ms-1">(${w.config.series[seriesIndex].data[dataPointIndex].x})</span></h6>
+                            <hr class="my-2 border-secondary">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-white-50">Price:</span>
+                                <span class="fw-bold">$${data.price.toFixed(2)}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-white-50">Change:</span>
+                                <span class="fw-bold ${isPos ? 'text-success' : 'text-danger'}">${isPos ? '+' : ''}${data.change.toFixed(2)}%</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-white-50">Size Weight:</span>
+                                <span>${size.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        };
+
+        chart = new ApexCharts(document.querySelector("#heatmapChart"), finalOptions);
+        chart.render();
+
+        // Handle market switching
+        document.querySelectorAll('.market-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Update UI state
+                document.querySelectorAll('.market-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                const market = this.getAttribute('data-market');
+                const overlay = document.getElementById('loadingOverlay');
+                
+                // Show loading
+                overlay.classList.remove('d-none');
+                
+                // Fetch new Market Data
+                fetch(`/screener?market=${market}`, {
+                    headers: { 'Accept': 'application/json' }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Update chart with new data
+                    const processedNewData = data.map(item => {
+                        let bgColor = '#64748b';
+                        const ranges = getColorRanges();
+                        for (let r of ranges) {
+                            if (item.change_percent >= r.from && item.change_percent <= r.to) {
+                                bgColor = r.color;
+                                break;
+                            }
+                        }
+                        return {
+                            x: item.x, 
+                            y: item.y, 
+                            fillColor: bgColor,
+                            meta: { name: item.name, price: item.price, change: item.change_percent }
+                        };
+                    });
+                    
+                    chart.updateSeries([{ data: processedNewData }]);
+                    
+                    // Hide loading
+                    setTimeout(() => overlay.classList.add('d-none'), 300);
+                })
+                .catch(error => {
+                    console.error('Error fetching heatmap data:', error);
+                    overlay.classList.add('d-none');
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

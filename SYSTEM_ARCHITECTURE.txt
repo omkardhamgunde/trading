@@ -1,0 +1,198 @@
+System Architecture – Real-Time Trading Simulation Platform
+
+
+1. High-Level View
+------------------
+
+Client (Browser)
+    ↓  (HTTP + WebSocket)
+Backend (Flask + Flask-SocketIO)
+    ↓
+MySQL Database + In-Memory Cache + Metrics
+
+
+2. Components
+-------------
+
+1) Client Side (Frontend)
+   - HTML/CSS/Jinja2 templates:
+       • home.html, login.html
+       • watchlist.html
+       • holdings.html
+       • wallet.html
+       • trade_log.html
+   - JavaScript + Socket.IO client:
+       • Opens WebSocket connection to the backend.
+       • Emits:
+           - subscribe_watchlist { user_id }
+           - subscribe_holdings { user_id }
+       • Listens for:
+           - price_update
+           - holdings_update
+       • Updates the DOM (tables, cards, prices, P/L) in real time.
+
+
+2) Backend Core (Flask Application)
+   - File: app.py
+   - Responsibilities:
+       • Initialize Flask app.
+       • Load configuration from config.py and .env.
+       • Initialize MySQL (flask_pymysql).
+       • Initialize SocketIO with gevent async mode.
+       • Register Blueprints (route modules).
+       • Start WebSocket background task (background_price_updater).
+       • Run the combined HTTP + WebSocket server on a single port (e.g., 5001).
+
+
+3) Route Layer (Blueprints in routes/)
+   - routes/auth.py
+       • /, /login (email/password), /login/google, /login/google/authorized, /logout.
+       • Sets session['user_id'] after successful login (email or Google OAuth).
+       • Ensures each new user gets a default wallet.
+
+   - routes/watchlist.py
+       • Watchlist page route.
+       • Endpoints to add/remove stocks from a user’s watchlist.
+       • Stock search API that uses services/stock_service.py.
+
+   - routes/holdings.py
+       • /holdings route.
+       • Uses services/holdings_service.py to compute holdings and P/L.
+
+   - routes/trading.py
+       • /trade (POST) to execute buy/sell orders.
+       • /trade-log to view historical trades.
+       • /clear-trade-log with safety checks (no active holdings).
+       • Uses services/trade_service.py for validation and execution.
+
+   - routes/wallet.py
+       • Wallet page and “add funds” functionality.
+
+   - routes/health.py
+       • /health: basic status + uptime.
+       • /metrics: API call counts, cache stats, performance metrics.
+
+
+4) Service Layer (services/)
+   - Purpose: contain business logic separate from HTTP/WebSocket handling.
+
+   - services/stock_service.py
+       • search_stocks(query)
+       • get_stock_price(symbol)
+       • get_stock_prices(symbols)
+       • Uses yfinance and in-memory TTL cache (price_cache, api_cache).
+
+   - services/trade_service.py
+       • get_current_stock_price(symbol)
+       • validate_trade(mysql, user_id, symbol, action, quantity)
+       • check_wallet_balance(mysql, user_id, required_amount)
+       • execute_trade(mysql, user_id, symbol, action, quantity, price)
+       • Uses ACID transaction: UPDATE wallet + INSERT trade_log in one transaction
+         (commit on success, rollback on error).
+
+   - services/holdings_service.py
+       • Computes current holdings from trade_log (net quantity per symbol).
+       • Fetches prices and calculates average price, total value, and P/L.
+
+   - services/wallet_service.py
+       • Encapsulates wallet-related queries and updates.
+
+
+5) WebSocket Layer (handlers/websocket_handlers.py)
+   - Uses Flask-SocketIO.
+   - active_connections: dictionary mapping Socket.IO session id (sid) to:
+       • user_id
+       • subscriptions set: { 'watchlist', 'holdings' }
+
+   - Event handlers:
+       • @socketio.on('connect')
+           - Logs new connection.
+       • @socketio.on('disconnect')
+           - Removes sid from active_connections to avoid leaks.
+       • @socketio.on('subscribe_watchlist')
+           - Stores user_id and adds 'watchlist' to subscriptions.
+       • @socketio.on('subscribe_holdings')
+           - Stores user_id and adds 'holdings' to subscriptions.
+
+   - Background task: background_price_updater()
+       • Runs in an infinite loop with socketio.sleep(10) between iterations.
+       • Uses with app.app_context(): to allow DB access outside HTTP requests.
+       • For each user with active connections:
+           1. Query MySQL for:
+               - Watchlist symbols.
+               - Trade log (to compute holdings).
+           2. Use services/stock_service.get_stock_prices() to fetch prices
+              (benefits from TTL cache).
+           3. Emit:
+               - 'price_update' to all sids subscribed to 'watchlist' for that user.
+               - 'holdings_update' to all sids subscribed to 'holdings'.
+           4. If an emit fails due to disconnect, remove that sid from active_connections.
+
+
+6) Infrastructure & Utilities
+   - config.py + .env
+       • Loads environment variables (SECRET_KEY, MySQL credentials, Google OAuth keys, etc.).
+       • Provides Config.get_mysql_config() and Config.get_google_oauth_config().
+
+   - MySQL Database
+       • Tables for users, wallet, watchlist, trade_log, etc.
+       • Ensures ACID properties for financial operations via transactions.
+
+   - utils/cache.py
+       • TTLCache data structure with thread-safe operations and expiration.
+       • price_cache: caches stock prices (default TTL ≈ 10 seconds).
+       • api_cache: caches API responses if needed.
+
+   - utils/metrics.py
+       • MetricsTracker: tracks API calls, average latency, and uptime.
+       • Exposed through /metrics for verification of performance claims.
+
+   - utils/performance.py
+       • PerformanceMonitor: tracks latency before/after optimizations and
+         estimates percentage improvement.
+
+   - utils/logging_config.py
+       • Centralizes logging setup with appropriate log levels and filtering
+         of noisy third-party logs.
+
+
+7) Overall System Flow (Textual)
+--------------------------------
+
+1. User visits the site and logs in (email/password or Google OAuth).
+   - On success, session['user_id'] is set and a default wallet is ensured.
+
+2. User opens the watchlist or holdings page.
+   - Browser loads HTML/Jinja2 page and JS.
+   - JS creates a Socket.IO connection to the backend.
+   - On connect, JS emits:
+       • subscribe_watchlist { user_id }   OR
+       • subscribe_holdings { user_id }
+
+3. Backend stores the connection in active_connections for that user and
+   subscription type.
+
+4. The background_price_updater loop runs every ~10 seconds:
+   - For each user:
+       • Load watchlist and trades from MySQL.
+       • Use yfinance (via stock_service) with TTL cache to get prices.
+       • Compute holdings and P/L where needed.
+       • Emit price_update / holdings_update to each connected client.
+
+5. Browser receives these events and updates the UI without page reloads.
+
+6. When user submits a trade:
+   - /trade route:
+       • Checks if session['user_id'] exists (user is logged in).
+       • validate_trade() to ensure enough shares (sell) or valid quantity.
+       • get_current_stock_price() via yfinance.
+       • check_wallet_balance() for buy orders.
+       • execute_trade():
+           - UPDATE wallet.
+           - INSERT into trade_log.
+           - Commit or rollback transaction.
+       • flash() success or error message and redirect (typically to holdings).
+
+7. The next WebSocket update reflects the new holdings and wallet state in
+   real time on the UI.
+

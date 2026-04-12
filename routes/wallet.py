@@ -3,6 +3,9 @@ Wallet routes.
 """
 from flask import Blueprint, render_template, redirect, session, flash, request, url_for
 from services.wallet_service import get_wallet_balance, add_funds, get_wallet_transactions
+import logging
+
+logger = logging.getLogger(__name__)
 
 wallet_bp = Blueprint('wallet', __name__)
 
@@ -47,6 +50,6 @@ def add_funds_route():
         flash('Invalid amount entered.', 'danger')
     except Exception as e:
         flash('An error occurred while processing your request.', 'danger')
-        print(f"Error adding funds: {str(e)}")
+        logger.error(f"Error adding funds: {e}", exc_info=True)
         
     return redirect(url_for('wallet.wallet'))

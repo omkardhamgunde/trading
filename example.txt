@@ -1,0 +1,90 @@
+Project  Synopsis 
+ 
+1. Introduction 
+Career recommendation systems aim to guide students or professionals in selecting optimal career paths based on 
+their skills, interests, academic background, and personality traits. Traditional methods, such as aptitude tests or 
+counselor-based systems, often fall short in adapting to individual diversity and evolving industry needs. 
+This project leverages feature selection techniques and machine learning models to build an intelligent, data
+driven career guidance system. By selecting the most relevant features—such as academic scores, skillsets, interests, 
+and behavioral profiles—the system improves model efficiency, accuracy, and interpretability. The system will 
+recommend career paths such as Software Engineer, Data Scientist, Graphic Designer, Financial Analyst, and more 
+based on personalized input and real-world datasets. 
+
+
+2. Review of Literature 
+1. "Career Path Suggestion System based on Academic Background and Personality Traits" (IEEE, 
+2024) by N. Anusha et al. 
+This study presents a hybrid ML model combining decision trees and KNN to predict career paths using 
+academic and psychological inputs. It also explores feature engineering to enhance model performance. 
+2. "Design of a Career Guidance System using Machine Learning Algorithms" (Springer, 2023) by S. 
+Srivastava et al. 
+The authors use SVM, Random Forest, and Logistic Regression on career-relevant features. The system 
+outperforms rule-based matching and demonstrates significant accuracy improvement using Recursive 
+Feature Elimination. 
+3. "Predicting Ideal Career Choices using Feature Selection and Neural Networks" (Elsevier, 2023) by 
+A. Patel and B. Shah. 
+Focuses on genetic algorithms for feature selection and multi-layer perceptrons for prediction. The paper 
+emphasizes scalability in large datasets and achieving personalization through behavioral data. 
+4. "Career Recommendation System Using Interest and Personality-Based Profiling" (IEEE, 2024) by 
+H. Thakur et al. 
+Introduces a model incorporating Holland’s RIASEC theory and MBTI profiling. Uses TF-IDF and cosine 
+similarity alongside ML models to map personality clusters to job profiles. 
+5. "A Survey on Career Recommendation Systems: Techniques and Trends" (ScienceDirect, 2024) by 
+M. S. Khurana et al. 
+Comprehensive analysis of ML-based guidance systems, discussing the importance of hybrid approaches 
+combining content-based filtering, collaborative filtering, and classification models. 
+6. "Feature Selection in High Dimensional Career Datasets Using LASSO and Boruta" (Springer, 
+2023) by K. Joshi et al. 
+Explores embedded feature selection methods in high-dimensional datasets. Demonstrates how feature 
+pruning using LASSO improves training time and model interpretability. 
+ 
+3. Problem Statement 
+Most existing career recommendation platforms lack adaptability and personalization. They fail to incorporate 
+dynamic features like soft skills, interests, and real-world data. 
+This project aims to: 
+ 
+• Build a personalized, ML-based recommendation system using relevant academic, personality, and 
+interest-based features.
+
+• Use advanced feature selection techniques to improve prediction performance and interpretability. 
+ 
+• Handle scalability and integration with future user data in a cloud-friendly infrastructure.
+
+4. Objectives 
+• To collect and preprocess data combining academic, skill, interest, and personality dimensions. 
+ 
+• To apply multiple feature selection techniques (LASSO, Boruta, Chi-Square, RFE) for optimized  
+modeling. 
+ 
+• To compare and implement ML algorithms such as Random Forest, SVM, and XGBoost. 
+ 
+• To recommend top 3 suitable career paths based on the model's prediction and confidence score. 
+ 
+• To design an interactive web interface that allows users to input data and receive career suggestions. 
+ 
+• To evaluate the system using metrics such as Accuracy, F1 Score, and Confusion Matrix.
+
+5. System Architecture 
+ 
+The architecture of the Career Guidance System consists of several major components: 
+1. User Interface (Frontend): Web form where students input their details including grades, interests, 
+personality test scores, and skill levels. 
+ 
+2. Backend Server (Flask/Django API): Receives input data, preprocesses it, and passes it to the ML 
+model. 
+ 
+3. Feature Selector Module: Applies filter/wrapper/embedded methods (e.g., Chi-Square, RFE, Boruta) to 
+extract relevant features from input. 
+ 
+4. Machine Learning Engine: Trained models (e.g., Random Forest, XGBoost) classify user input into 
+potential career paths with confidence scores. 
+ 
+5. Database Layer (MySQL/PostgreSQL/MongoDB): Stores user inputs, model results, and user feedback 
+for retraining and analytics. 
+ 
+6. Result Visualizer: Displays top 3 recommended careers with reason metrics and optional improvement 
+suggestions. 
+ 
+ 
+System Flow: 
+User Input → Feature Selection → Model Prediction → Career Recommendations → Feedback Logging

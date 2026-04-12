@@ -56,7 +56,7 @@ def add_funds(mysql, user_id, amount):
         
     except Exception as e:
         mysql.connection.rollback()
-        print(f"Error adding funds: {str(e)}")
+        logger.error(f"Error adding funds: {e}", exc_info=True)
         return False, 'An error occurred while processing your request.'
 
 

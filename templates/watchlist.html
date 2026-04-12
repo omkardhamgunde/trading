@@ -6,129 +6,321 @@
     <title>Trading Dashboard - Watchlist</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <style>
-        /* Updated Background Color */
+        /* ── Premium Animated Background ── */
         body {
-            background-color: #000000; /* Black Background */
-            color: #ffffff; /* White Text */
+            background: linear-gradient(135deg, #0a0a1a 0%, #111128 40%, #0d1b2a 100%);
+            background-attachment: fixed;
+            color: #ffffff;
             font-size: 18px;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            margin: 0; /* Remove default margin for full coverage */
-            padding: 0; /* Remove default padding for full coverage */
-            min-height: 100vh; /* Ensure the background covers the full viewport height */
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
+
+        /* Animated floating orbs */
+        body::before, body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.15;
+            z-index: 0;
+            pointer-events: none;
+        }
+        body::before {
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, #667eea, transparent 70%);
+            top: -10%; left: -5%;
+            animation: orbFloat1 20s ease-in-out infinite alternate;
+        }
+        body::after {
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, #764ba2, transparent 70%);
+            bottom: -10%; right: -5%;
+            animation: orbFloat2 25s ease-in-out infinite alternate;
+        }
+        @keyframes orbFloat1 {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(80px, 60px) scale(1.15); }
+        }
+        @keyframes orbFloat2 {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(-70px, -50px) scale(1.2); }
+        }
+
+        /* Smooth staggered entrance animation */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(25px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 5px rgba(102,126,234,0.3); }
+            50% { box-shadow: 0 0 20px rgba(102,126,234,0.6); }
+        }
+        @keyframes priceFlash {
+            0%, 100% { background-color: transparent; }
+            50% { background-color: rgba(102,126,234,0.25); transform: scale(1.03); }
+        }
+        .price-flash { animation: priceFlash 0.5s ease-in-out; border-radius: 0.5rem; }
 
         .dashboard-container {
-            max-width: 1400px; /* Increased Width */
+            max-width: 1400px;
             margin: 0 auto;
             padding: 2rem;
+            padding-top: 6rem;
+            position: relative;
+            z-index: 1;
         }
 
+        /* ── Premium Glass Cards ── */
         .card {
-            background: #1a1a1a; /* Dark Grey Background for Cards */
-            border-radius: 0.75rem;
-            box-shadow: 0 4px 6px -1px rgba(255, 255, 255, 0.1); /* Subtle Shadow */
-            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.06);
+            padding: 2rem;
             margin-bottom: 1.5rem;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: fadeInUp 0.6s ease-out both;
         }
 
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 24px 48px rgba(102, 126, 234, 0.15), 0 0 0 1px rgba(102, 126, 234, 0.2);
+            border-color: rgba(102, 126, 234, 0.25);
+        }
+
+        /* ── Market Indices Grid ── */
         .index-section {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Increased Column Size */
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.25rem;
             margin-bottom: 1.5rem;
         }
 
         .index-card {
-            background: #2d2d2d; /* Slightly Lighter Grey for Index Cards */
-            border-radius: 0.75rem;
-            padding: 1.25rem;
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1rem;
+            padding: 1.5rem;
             text-align: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Subtle shimmer on index cards */
+        .index-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 200%; height: 100%;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                rgba(255,255,255,0.03) 50%,
+                transparent 100%);
+            animation: shimmer 8s infinite;
+        }
+
+        .index-card:hover {
+            transform: translateY(-6px) scale(1.02);
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(102, 126, 234, 0.35);
+            box-shadow: 0 12px 36px rgba(102, 126, 234, 0.2), 0 0 0 1px rgba(102,126,234,0.15);
         }
 
         .index-name {
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+            color: rgba(255,255,255,0.7);
+            letter-spacing: 0.5px;
         }
 
         .index-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-bottom: 0.5rem;
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+            font-family: 'Inter', monospace;
+            background: linear-gradient(135deg, #e0e7ff, #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
+        /* ── Watchlist Items ── */
         .watchlist-item {
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr 0.5fr; /* Adjusted Columns */
+            grid-template-columns: 2fr 1fr 1fr 1fr 0.5fr;
             align-items: center;
-            padding: 1.25rem;
-            border-bottom: 1px solid #333333; /* Lighter Border for Contrast */
-            transition: all 0.3s ease; /* Smooth Transition */
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-radius: 0.75rem;
+            margin-bottom: 0.35rem;
+            position: relative;
         }
 
         .watchlist-item:hover {
-            background-color: #2d2d2d; /* Slightly Lighter Grey on Hover */
-            transform: translateY(-2px); /* Lift Effect */
-            box-shadow: 0 4px 6px -1px rgba(255, 255, 255, 0.1); /* Subtle Shadow on Hover */
+            background: rgba(102, 126, 234, 0.06);
+            transform: translateY(-2px) scale(1.005);
+            box-shadow: 0 6px 24px rgba(102, 126, 234, 0.12);
+            border-color: rgba(102, 126, 234, 0.15);
         }
 
         .stock-price {
-            font-family: 'Monaco', monospace;
-            color: #ffffff; /* White Text */
-            font-size: 1.2rem;
+            font-family: 'Inter', 'Monaco', monospace;
+            color: #e0e7ff;
+            font-size: 1.15rem;
+            font-weight: 600;
         }
 
+        /* ── Action Buttons ── */
         .action-button {
-            padding: 0.875rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: 500;
-            transition: all 0.2s ease; /* Smooth Transition */
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.6rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: none;
+            cursor: pointer;
+            letter-spacing: 0.3px;
         }
 
         .action-button:hover {
-            transform: translateY(-1px); /* Slight Lift on Hover */
-            box-shadow: 0 2px 4px -1px rgba(255, 255, 255, 0.1); /* Subtle Shadow on Hover */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
         }
 
         .add-button {
-            background-color: #38a169; /* Green Button */
+            background: linear-gradient(135deg, #10b981, #059669);
             color: white;
         }
-
         .add-button:hover {
-            background-color: #2f855a;
+            box-shadow: 0 6px 20px rgba(16,185,129,0.4);
         }
 
         .delete-button {
-            background-color: #e53e3e; /* Red Button */
+            background: linear-gradient(135deg, #ef4444, #dc2626);
             color: white;
         }
-
         .delete-button:hover {
-            background-color: #c53030;
+            box-shadow: 0 6px 20px rgba(239,68,68,0.4);
         }
 
         .trade-button {
-            background-color: #3182ce; /* Blue Button */
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
         }
-
         .trade-button:hover {
-            background-color: #2b6cb0;
+            box-shadow: 0 6px 20px rgba(102,126,234,0.4);
+        }
+
+        /* ── Premium Navbar ── */
+        .navbar-modern {
+            background: rgba(10, 10, 26, 0.92);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+            border-bottom: 1px solid rgba(102, 126, 234, 0.15);
+            padding: 0.8rem 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        /* Gradient glow line under navbar */
+        .navbar-modern::after {
+            content: '';
+            position: absolute;
+            bottom: -1px; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #667eea, #764ba2, transparent);
+            opacity: 0.6;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .nav-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-links-right {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-brand {
+            font-weight: 800;
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #a78bfa 50%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .nav-link {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
             padding: 0.5rem 1rem;
             border-radius: 0.5rem;
-            color: white; /* White Text for Nav Links */
-            text-decoration: none;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            position: relative;
+            display: flex;
+            align-items: center;
         }
 
         .nav-link:hover {
-            background-color: #4a5568; /* Dark Grey Hover for Nav Links */
+            color: #ffffff;
+            background: rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .nav-link.active {
+            color: #ffffff;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+        }
+
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 2px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
         }
 
         input, select {
@@ -185,27 +377,368 @@
         .search-result-item:hover {
             background-color: #374151 !important;
         }
+
+        /* Market Filter Tabs */
+        .market-filter-bar {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .market-pill {
+            padding: 0.5rem 1.25rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.7);
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .market-pill:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+
+        .market-pill.active {
+            color: #fff;
+            border-color: transparent;
+        }
+
+        .market-pill.active[data-market="india"] {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+        }
+        .market-pill.active[data-market="usa"] {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+        .market-pill.active[data-market="crypto"] {
+            background: linear-gradient(135deg, #a855f7, #7c3aed);
+        }
+
+        .category-pills {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .category-pill {
+            padding: 0.35rem 1rem;
+            border-radius: 1.5rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(255, 255, 255, 0.6);
+            transition: all 0.25s ease;
+        }
+
+        .category-pill:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+        }
+
+        .category-pill.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .filter-label {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-right: 0.25rem;
+        }
+
+        .exchange-badge {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .badge-nse { background: #f97316; color: #fff; }
+        .badge-nyse { background: #3b82f6; color: #fff; }
+        .badge-crypto { background: #a855f7; color: #fff; }
+        .badge-comm { background: #eab308; color: #000; }
+        .badge-bond { background: #22d3ee; color: #000; }
+
+        /* ── Live Indicator ── */
+        .live-dot {
+            display: inline-block;
+            width: 10px; height: 10px;
+            background: #10b981;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse-live 2s ease-in-out infinite;
+            vertical-align: middle;
+        }
+        @keyframes pulse-live {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(16,185,129,0.5); }
+            50% { opacity: 0.7; box-shadow: 0 0 0 8px rgba(16,185,129,0); }
+        }
+
+        /* ── Quick Trade Form ── */
+        .quick-trade-card input,
+        .quick-trade-card select {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 0.6rem;
+            color: #fff;
+            padding: 0.9rem 1rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        .quick-trade-card input:focus,
+        .quick-trade-card select:focus {
+            outline: none;
+            border-color: rgba(102,126,234,0.5);
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.15);
+            background: rgba(255,255,255,0.08);
+        }
+        /* ── Scrolling Ticker Tape ── */
+        .ticker-tape {
+            background: rgba(10,10,26,0.95);
+            border-bottom: 1px solid rgba(102,126,234,0.15);
+            overflow: hidden;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1001;
+            height: 36px;
+            display: flex;
+            align-items: center;
+        }
+        .ticker-track {
+            display: flex;
+            animation: tickerScroll 30s linear infinite;
+            white-space: nowrap;
+        }
+        .ticker-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0 24px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: rgba(255,255,255,0.7);
+        }
+        .ticker-item .ticker-symbol {
+            color: #a78bfa;
+            font-weight: 600;
+        }
+        .ticker-item .ticker-up { color: #10b981; }
+        .ticker-item .ticker-down { color: #ef4444; }
+        .ticker-separator {
+            color: rgba(255,255,255,0.15);
+            padding: 0 4px;
+        }
+        @keyframes tickerScroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Adjust navbar for ticker tape */
+        .navbar-modern { top: 36px !important; }
+        .dashboard-container { padding-top: 8.5rem !important; }
+
+        /* ── Animated Particle Canvas ── */
+        #particleCanvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ── Portfolio Stats Bar ── */
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.03);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 1rem;
+            padding: 1.25rem 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: fadeInUp 0.5s ease-out both;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            border-radius: 1rem 1rem 0 0;
+        }
+        .stat-card:nth-child(1)::before { background: linear-gradient(90deg, #667eea, #764ba2); }
+        .stat-card:nth-child(2)::before { background: linear-gradient(90deg, #10b981, #059669); }
+        .stat-card:nth-child(3)::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
+        .stat-card:nth-child(4)::before { background: linear-gradient(90deg, #ec4899, #be185d); }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(102,126,234,0.2);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+        .stat-card .stat-icon {
+            width: 42px; height: 42px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
+            margin-bottom: 0.75rem;
+        }
+        .stat-card:nth-child(1) .stat-icon { background: rgba(102,126,234,0.15); color: #667eea; }
+        .stat-card:nth-child(2) .stat-icon { background: rgba(16,185,129,0.15); color: #10b981; }
+        .stat-card:nth-child(3) .stat-icon { background: rgba(245,158,11,0.15); color: #f59e0b; }
+        .stat-card:nth-child(4) .stat-icon { background: rgba(236,72,153,0.15); color: #ec4899; }
+        .stat-card .stat-label {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.45);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 4px;
+        }
+        .stat-card .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+        }
+        .stat-card .stat-sub {
+            font-size: 0.72rem;
+            color: rgba(255,255,255,0.35);
+            margin-top: 2px;
+        }
+
+        /* ── Market Clock ── */
+        .market-clock {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.78rem;
+            color: rgba(255,255,255,0.5);
+            margin-left: auto;
+            padding: 4px 12px;
+            background: rgba(255,255,255,0.04);
+            border-radius: 6px;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .market-clock .clock-time {
+            font-family: 'Inter', monospace;
+            font-weight: 600;
+            color: rgba(255,255,255,0.8);
+            font-variant-numeric: tabular-nums;
+        }
+        .market-status-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .market-status-dot.open { background: #10b981; box-shadow: 0 0 6px rgba(16,185,129,0.5); }
+        .market-status-dot.closed { background: #ef4444; }
+
+        @media (max-width: 768px) {
+            .stats-overview { grid-template-columns: repeat(2, 1fr); }
+            .ticker-tape { display: none; }
+            .navbar-modern { top: 0 !important; }
+            .dashboard-container { padding-top: 6rem !important; }
+        }
     </style>
 </head>
 <body>
-    <nav class="bg-gray-900 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 py-3">
-            <div class="flex justify-between items-center">
-                <h1 class="text-2xl font-bold text-white">Trading Dashboard</h1>
-                <div class="space-x-4">
-                    <a href="/wallet" class="nav-link"><i class="fas fa-wallet mr-2"></i>Wallet</a>
-                    <a href="/trade-log" class="nav-link"><i class="fas fa-history mr-2"></i>Trade Log</a>
-                    <a href="/holdings" class="nav-link"><i class="fas fa-briefcase mr-2"></i>Holdings</a>
-                    <a href="/logout" class="nav-link"><i class="fas fa-sign-out-alt mr-2"></i>Logout</a>
+    <!-- Animated Particle Canvas -->
+    <canvas id="particleCanvas"></canvas>
+
+    <!-- Scrolling Ticker Tape -->
+    <div class="ticker-tape">
+        <div class="ticker-track" id="tickerTrack">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+
+    <nav class="navbar-modern">
+        <div class="nav-container">
+            <div class="nav-content">
+                <a href="/" class="nav-brand">
+                    <i class="fas fa-chart-line me-2"></i>Trading Dashboard
+                </a>
+                <div class="nav-links">
+                    <a href="{{ url_for('watchlist.watchlist') }}" class="nav-link active">
+                        <i class="fas fa-eye me-1"></i>Watchlist
+                    </a>
+                    <a href="{{ url_for('watchlist.screener') }}" class="nav-link">
+                        <i class="fas fa-th-large me-1"></i>Screener
+                    </a>
+                    <a href="{{ url_for('holdings.holdings') }}" class="nav-link">
+                        <i class="fas fa-briefcase me-1"></i>Holdings
+                    </a>
+                    <a href="{{ url_for('trading.trade_log') }}" class="nav-link">
+                        <i class="fas fa-history me-1"></i>Trade Log
+                    </a>
+                    <a href="{{ url_for('wallet.wallet') }}" class="nav-link">
+                        <i class="fas fa-wallet me-1"></i>Wallet
+                    </a>
+                </div>
+                <div class="nav-links-right">
+                    <div class="market-clock">
+                        <span class="market-status-dot" id="marketStatusDot"></span>
+                        <span id="marketStatusText">Market</span>
+                        <span class="clock-time" id="navClock">--:--:--</span>
+                    </div>
+                    <a href="{{ url_for('auth.logout') }}" class="nav-link">
+                        <i class="fas fa-sign-out-alt me-1"></i>Logout
+                    </a>
                 </div>
             </div>
         </div>
     </nav>
 
     <div class="dashboard-container">
+        <!-- Portfolio Stats Overview -->
+        <div class="stats-overview">
+            <div class="stat-card" style="animation-delay: 0.05s;">
+                <div class="stat-icon"><i class="fas fa-eye"></i></div>
+                <div class="stat-label">Watchlist Items</div>
+                <div class="stat-value" id="statWatchCount">{{ watchlist|length }}</div>
+                <div class="stat-sub">Stocks tracked</div>
+            </div>
+            <div class="stat-card" style="animation-delay: 0.1s;">
+                <div class="stat-icon"><i class="fas fa-globe"></i></div>
+                <div class="stat-label">Markets Available</div>
+                <div class="stat-value">3</div>
+                <div class="stat-sub">India • USA • Crypto</div>
+            </div>
+            <div class="stat-card" style="animation-delay: 0.15s;">
+                <div class="stat-icon"><i class="fas fa-bolt"></i></div>
+                <div class="stat-label">Live Tracking</div>
+                <div class="stat-value">4</div>
+                <div class="stat-sub">Market indices</div>
+            </div>
+            <div class="stat-card" style="animation-delay: 0.2s;">
+                <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                <div class="stat-label">Session Time</div>
+                <div class="stat-value" id="sessionTime">00:00</div>
+                <div class="stat-sub">Active trading</div>
+            </div>
+        </div>
+
         <!-- Indices Section -->
-        <div class="card">
-            <h2 class="text-xl font-semibold text-gray-200 mb-4">Market Indices</h2>
+        <div class="card" style="animation-delay: 0.1s;">
+            <h2 class="text-xl font-semibold text-gray-200 mb-4" style="display: flex; align-items: center;">
+                <span class="live-dot"></span>
+                Market Indices
+                <span style="margin-left: auto; font-size: 0.75rem; color: rgba(255,255,255,0.4); font-weight: 400;">LIVE</span>
+            </h2>
             <div class="index-section">
                 <div class="index-card">
                     <i class="fas fa-chart-line text-2xl mb-2 text-blue-400"></i>
@@ -261,12 +794,38 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Watchlist Section -->
             <div class="lg:col-span-2">
-                <div class="card">
-                    <div class="flex justify-between items-center mb-4">
+                <div class="card" style="animation-delay: 0.2s;">
+                    <div class="flex justify-between items-center mb-2">
                         <h2 class="text-xl font-semibold text-gray-200">Watchlist</h2>
+                    </div>
+
+                    <!-- Market Filter Tabs -->
+                    <div class="market-filter-bar" id="marketFilterBar">
+                        <span class="filter-label">Market:</span>
+                        <div class="market-pill" data-market="india" onclick="selectMarket('india')">
+                            &#127470;&#127475; India
+                        </div>
+                        <div class="market-pill" data-market="usa" onclick="selectMarket('usa')">
+                            &#127482;&#127480; USA
+                        </div>
+                        <div class="market-pill" data-market="crypto" onclick="selectMarket('crypto')">
+                            &#8383; Crypto
+                        </div>
+                    </div>
+
+                    <!-- Sub-Category Pills (visible when India is selected) -->
+                    <div class="category-pills" id="categoryPills" style="display: none;">
+                        <span class="filter-label">Category:</span>
+                        <div class="category-pill" data-category="equity" onclick="selectCategory('equity')">Equity</div>
+                        <div class="category-pill" data-category="commodity" onclick="selectCategory('commodity')">Commodity</div>
+                        <div class="category-pill" data-category="bonds" onclick="selectCategory('bonds')">Bonds / ETFs</div>
+                    </div>
+
+                    <!-- Search Bar -->
+                    <div class="mb-4">
                         <form method="POST" class="flex relative" id="addStockForm">
-                            <div class="relative">
-                                <input type="text" id="stockSearch" name="stock_symbol" placeholder="Search stock name or symbol..." class="mr-2 w-full md:w-96" autocomplete="off">
+                            <div class="relative" style="flex: 1;">
+                                <input type="text" id="stockSearch" name="stock_symbol" placeholder="Search stock name or symbol..." class="mr-2 w-full" autocomplete="off">
                                 <div id="searchResults" class="absolute top-full left-0 right-0 bg-gray-800 border border-gray-600 rounded-b-lg shadow-lg z-50 hidden max-h-64 overflow-y-auto"></div>
                             </div>
                             <button type="submit" class="action-button add-button">
@@ -326,8 +885,10 @@
 
             <!-- Trade Form Section -->
             <div class="lg:col-span-1">
-                <div class="card">
-                    <h2 class="text-xl font-semibold text-gray-200 mb-4">Quick Trade</h2>
+                <div class="card quick-trade-card" style="animation-delay: 0.35s;">
+                    <h2 class="text-xl font-semibold text-gray-200 mb-4" style="display:flex; align-items:center;">
+                        <i class="fas fa-bolt me-2" style="color:#a78bfa;"></i>Quick Trade
+                    </h2>
                     <form action="/trade" method="POST" class="space-y-4">
                         <div class="relative">
                             <label for="trade_stock_symbol" class="block text-base font-medium text-gray-300 mb-1">Stock Symbol</label>
@@ -425,8 +986,98 @@
     <!-- TradingView Widget Script -->
     <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 
-    <!-- Stock Search Autocomplete -->
+    <!-- Market Filter + Stock Search Autocomplete -->
     <script>
+        // ============================================
+        // Market / Category Filter State
+        // ============================================
+        let selectedMarket = null;
+        let selectedCategory = null;
+
+        function selectMarket(market) {
+            const pills = document.querySelectorAll('.market-pill');
+            const catContainer = document.getElementById('categoryPills');
+            const catPills = document.querySelectorAll('.category-pill');
+
+            // Toggle: clicking the same pill deselects it
+            if (selectedMarket === market) {
+                selectedMarket = null;
+                selectedCategory = null;
+                pills.forEach(p => p.classList.remove('active'));
+                catContainer.style.display = 'none';
+                catPills.forEach(p => p.classList.remove('active'));
+                filterWatchlistItems();
+                return;
+            }
+
+            selectedMarket = market;
+            selectedCategory = null;
+            pills.forEach(p => p.classList.remove('active'));
+            document.querySelector(`.market-pill[data-market="${market}"]`).classList.add('active');
+
+            // Show sub-categories only for India
+            catPills.forEach(p => p.classList.remove('active'));
+            if (market === 'india') {
+                catContainer.style.display = 'flex';
+            } else {
+                catContainer.style.display = 'none';
+            }
+
+            filterWatchlistItems();
+        }
+
+        // Determine which market a symbol belongs to based on its suffix
+        function getSymbolMarket(symbol) {
+            if (symbol.endsWith('.NS') || symbol.endsWith('.BO')) return 'india';
+            if (symbol.endsWith('-USD')) return 'crypto';
+            return 'usa';
+        }
+
+        // Show/hide watchlist items based on selected market
+        function filterWatchlistItems() {
+            document.querySelectorAll('.stock-item').forEach(item => {
+                const symbol = item.dataset.symbol;
+                if (!selectedMarket) {
+                    item.style.display = '';  // show all
+                } else {
+                    item.style.display = (getSymbolMarket(symbol) === selectedMarket) ? '' : 'none';
+                }
+            });
+        }
+
+        function selectCategory(category) {
+            const catPills = document.querySelectorAll('.category-pill');
+            if (selectedCategory === category) {
+                selectedCategory = null;
+                catPills.forEach(p => p.classList.remove('active'));
+                return;
+            }
+            selectedCategory = category;
+            catPills.forEach(p => p.classList.remove('active'));
+            document.querySelector(`.category-pill[data-category="${category}"]`).classList.add('active');
+        }
+
+        function buildSearchUrl(query) {
+            let url = `/search_stocks?q=${encodeURIComponent(query)}`;
+            if (selectedMarket) url += `&market=${selectedMarket}`;
+            if (selectedCategory) url += `&category=${selectedCategory}`;
+            return url;
+        }
+
+        function getBadgeClass(exchange) {
+            if (!exchange) return '';
+            const ex = exchange.toUpperCase();
+            if (ex === 'NSE') return 'badge-nse';
+            if (ex.includes('NYSE') || ex.includes('NASDAQ')) return 'badge-nyse';
+            if (ex === 'CRYPTO') return 'badge-crypto';
+            if (ex.includes('COMM')) return 'badge-comm';
+            if (ex.includes('BOND')) return 'badge-bond';
+            return '';
+        }
+
+        // ============================================
+        // Watchlist Search Autocomplete
+        // ============================================
         const searchInput = document.getElementById('stockSearch');
         const searchResults = document.getElementById('searchResults');
         let searchTimeout = null;
@@ -434,7 +1085,6 @@
         searchInput.addEventListener('input', function() {
             const query = this.value.trim();
             
-            // Clear previous timeout
             if (searchTimeout) {
                 clearTimeout(searchTimeout);
             }
@@ -444,9 +1094,8 @@
                 return;
             }
             
-            // Debounce the search
             searchTimeout = setTimeout(() => {
-                fetch(`/search_stocks?q=${encodeURIComponent(query)}`)
+                fetch(buildSearchUrl(query))
                     .then(response => response.json())
                     .then(data => {
                         if (data.length === 0) {
@@ -460,14 +1109,13 @@
                                             <span class="font-semibold text-white">${stock.symbol}</span>
                                             <span class="text-gray-400 ml-2">${stock.name}</span>
                                         </div>
-                                        <span class="text-xs text-gray-500 bg-gray-700 px-2 py-1 rounded">${stock.exchange}</span>
+                                        <span class="exchange-badge ${getBadgeClass(stock.exchange)}">${stock.exchange}</span>
                                     </div>
                                 </div>
                             `).join('');
                         }
                         searchResults.classList.remove('hidden');
                         
-                        // Add click handlers to results
                         document.querySelectorAll('.search-result-item').forEach(item => {
                             item.addEventListener('click', function() {
                                 searchInput.value = this.dataset.symbol;
@@ -543,7 +1191,7 @@
             }
             
             tradeSearchTimeout = setTimeout(() => {
-                fetch(`/search_stocks?q=${encodeURIComponent(query)}`)
+                fetch(buildSearchUrl(query))
                     .then(response => response.json())
                     .then(data => {
                         if (data.length === 0) {
@@ -552,9 +1200,12 @@
                             tradeSearchResults.innerHTML = data.map(stock => `
                                 <div class="trade-search-item p-2 hover:bg-gray-700 cursor-pointer border-b border-gray-700 last:border-b-0" 
                                      data-symbol="${stock.symbol}">
-                                    <div class="text-white text-sm">
-                                        <span class="text-gray-300">${stock.name}</span>
-                                        <span class="text-blue-400 font-semibold ml-1">(${stock.symbol})</span>
+                                    <div class="text-white text-sm flex justify-between items-center">
+                                        <span>
+                                            <span class="text-gray-300">${stock.name}</span>
+                                            <span class="text-blue-400 font-semibold ml-1">(${stock.symbol})</span>
+                                        </span>
+                                        <span class="exchange-badge ${getBadgeClass(stock.exchange)}">${stock.exchange}</span>
                                     </div>
                                 </div>
                             `).join('');
@@ -737,6 +1388,151 @@
             }
         `;
         document.head.appendChild(style);
+    </script>
+
+    <!-- ============================================ -->
+    <!-- Particle Canvas + Ticker + Clock Scripts     -->
+    <!-- ============================================ -->
+    <script>
+    // ── Animated Particle Network ──
+    (function() {
+        const canvas = document.getElementById('particleCanvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        const PARTICLE_COUNT = 50;
+        const MAX_DIST = 120;
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                vx: (Math.random() - 0.5) * 0.4,
+                vy: (Math.random() - 0.5) * 0.4,
+                r: Math.random() * 2 + 1,
+                opacity: Math.random() * 0.4 + 0.1
+            });
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particles.length; i++) {
+                const p = particles[i];
+                p.x += p.vx; p.y += p.vy;
+                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(102, 126, 234, ${p.opacity})`;
+                ctx.fill();
+
+                for (let j = i + 1; j < particles.length; j++) {
+                    const p2 = particles[j];
+                    const dx = p.x - p2.x, dy = p.y - p2.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < MAX_DIST) {
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.strokeStyle = `rgba(102, 126, 234, ${0.08 * (1 - dist / MAX_DIST)})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(draw);
+        }
+        draw();
+    })();
+
+    // ── Scrolling Ticker Tape ──
+    (function() {
+        const track = document.getElementById('tickerTrack');
+        if (!track) return;
+        const tickers = [
+            { sym: 'NIFTY 50', val: '{{ index_prices["^NSEI"].price }}', chg: '{{ index_prices["^NSEI"].change }}' },
+            { sym: 'NASDAQ', val: '{{ index_prices["^IXIC"].price }}', chg: '{{ index_prices["^IXIC"].change }}' },
+            { sym: 'DOW', val: '{{ index_prices["^DJI"].price }}', chg: '{{ index_prices["^DJI"].change }}' },
+            { sym: 'SENSEX', val: '{{ index_prices["^BSESN"].price }}', chg: '{{ index_prices["^BSESN"].change }}' },
+            { sym: 'RELIANCE', val: '₹1,250', chg: '+12.5' },
+            { sym: 'TCS', val: '₹3,600', chg: '-25.0' },
+            { sym: 'INFY', val: '₹1,480', chg: '+8.2' },
+            { sym: 'AAPL', val: '$178.50', chg: '+2.30' },
+            { sym: 'GOOGL', val: '$141.20', chg: '-1.10' },
+            { sym: 'MSFT', val: '$415.60', chg: '+3.80' },
+            { sym: 'BTC-USD', val: '$67,850', chg: '+520' },
+            { sym: 'ETH-USD', val: '$3,420', chg: '-45' },
+            { sym: 'TSLA', val: '$248.50', chg: '+5.20' },
+            { sym: 'AMZN', val: '$185.30', chg: '+1.40' },
+            { sym: 'HDFC', val: '₹1,640', chg: '+15.0' },
+        ];
+
+        let html = '';
+        // Duplicate for seamless loop
+        for (let loop = 0; loop < 2; loop++) {
+            tickers.forEach(t => {
+                const isUp = parseFloat(t.chg) >= 0;
+                const arrow = isUp ? '▲' : '▼';
+                const cls = isUp ? 'ticker-up' : 'ticker-down';
+                html += `<div class="ticker-item">
+                    <span class="ticker-symbol">${t.sym}</span>
+                    <span>${t.val}</span>
+                    <span class="${cls}">${arrow} ${t.chg}</span>
+                </div>`;
+            });
+        }
+        track.innerHTML = html;
+    })();
+
+    // ── Market Clock & Status ──
+    (function() {
+        const clockEl = document.getElementById('navClock');
+        const dotEl = document.getElementById('marketStatusDot');
+        const textEl = document.getElementById('marketStatusText');
+        const sessionEl = document.getElementById('sessionTime');
+        const sessionStart = Date.now();
+
+        function update() {
+            const now = new Date();
+            const h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
+            const timeStr = [h, m, s].map(v => String(v).padStart(2, '0')).join(':');
+            if (clockEl) clockEl.textContent = timeStr;
+
+            // NSE: 9:15 - 15:30 IST (Mon-Fri)
+            const day = now.getDay();
+            const mins = h * 60 + m;
+            const isWeekday = day >= 1 && day <= 5;
+            const nseOpen = isWeekday && mins >= 555 && mins <= 930; // 9:15 to 15:30
+
+            if (dotEl && textEl) {
+                if (nseOpen) {
+                    dotEl.className = 'market-status-dot open';
+                    textEl.textContent = 'NSE Open';
+                } else {
+                    dotEl.className = 'market-status-dot closed';
+                    textEl.textContent = 'NSE Closed';
+                }
+            }
+
+            // Session timer
+            if (sessionEl) {
+                const elapsed = Math.floor((Date.now() - sessionStart) / 1000);
+                const sm = Math.floor(elapsed / 60);
+                const ss = elapsed % 60;
+                sessionEl.textContent = `${String(sm).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+            }
+        }
+        update();
+        setInterval(update, 1000);
+    })();
     </script>
 </body>
 </html>

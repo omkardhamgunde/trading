@@ -166,6 +166,41 @@ STOCKS = {
             'HINDALCO': ('Hindalco', 'HINDALCO.NS'),
             'GOLDBEES': ('Nippon Gold ETF', 'GOLDBEES.NS'),
             'SILVERBEES': ('Nippon Silver ETF', 'SILVERBEES.NS'),
+            'GOLD1': ('Gold ETF', 'GOLD1.NS'),
+            'LICMFGOLD': ('LIC MF Gold ETF', 'LICMFGOLD.NS'),
+            'KOTAKGOLD': ('Kotak Gold ETF', 'KOTAKGOLD.NS'),
+            'AXISGOLD': ('Axis Gold ETF', 'AXISGOLD.NS'),
+            'SETFGOLD': ('SBI Gold ETF', 'SETFGOLD.NS'),
+            'ABSLBANETF': ('Aditya Birla Sun Life Nifty SDL Apr 2026 ETF', 'ABSLBANETF.NS'),
+            'GOLDSHARE': ('UTI Gold ETF', 'GOLDSHARE.NS'),
+            'SILVER1': ('Silver ETF', 'SILVER1.NS'),
+            'ICICISILVE': ('ICICI Prudential Silver ETF', 'ICICISILVE.NS'),
+            'AXISILVER': ('Axis Silver ETF', 'AXISILVER.NS'),
+            'SETFSILV': ('SBI Silver ETF', 'SETFSILV.NS'),
+            'HDFCSILVER': ('HDFC Silver ETF', 'HDFCSILVER.NS'),
+            'HDFCGOLD': ('HDFC Gold ETF', 'HDFCGOLD.NS'),
+            'GRAVITA': ('Gravita India', 'GRAVITA.NS'),
+            'HGINFRA': ('HG Infra Engineering', 'HGINFRA.NS'),
+            'JINDALSTEL': ('Jindal Steel & Power', 'JINDALSTEL.NS'),
+            'SAIL': ('Steel Authority of India', 'SAIL.NS'),
+            'APLAPOLLO': ('APL Apollo Tubes', 'APLAPOLLO.NS'),
+            'RATNAMANI': ('Ratnamani Metals', 'RATNAMANI.NS'),
+            'JSWHL': ('JSW Holdings', 'JSWHL.NS'),
+            'WELCORP': ('Welspun Corp', 'WELCORP.NS'),
+            'OIL': ('Oil India', 'OIL.NS'),
+            'PETRONET': ('Petronet LNG', 'PETRONET.NS'),
+            'GSPL': ('Gujarat State Petronet', 'GSPL.NS'),
+            'MGL': ('Mahanagar Gas', 'MGL.NS'),
+            'IGL': ('Indraprastha Gas', 'IGL.NS'),
+            'ATGL': ('Adani Total Gas', 'ATGL.NS'),
+            'AEGISLOG': ('Aegis Logistics', 'AEGISLOG.NS'),
+            'CASTROLIND': ('Castrol India', 'CASTROLIND.NS'),
+            'GUJGASLTD': ('Gujarat Gas', 'GUJGASLTD.NS'),
+            'GMDCLTD': ('Gujarat Mineral Development', 'GMDCLTD.NS'),
+            'NLCINDIA': ('NLC India', 'NLCINDIA.NS'),
+            'ASHAPURMIN': ('Ashapura Minechem', 'ASHAPURMIN.NS'),
+            'ORISSAMINE': ('Orissa Minerals Development', 'ORISSAMINE.NS'),
+            'RAIN': ('Rain Industries', 'RAIN.NS'),
         },
         'bonds': {
             'LIQUIDBEES': ('Nippon Liquid ETF', 'LIQUIDBEES.NS'),
@@ -176,6 +211,39 @@ STOCKS = {
             'SETFNIF50': ('SBI Nifty 50 ETF', 'SETFNIF50.NS'),
             'ICICIB22': ('ICICI Bharat Bond ETF', 'ICICIB22.NS'),
             'HDFCNIFETF': ('HDFC Nifty 50 ETF', 'HDFCNIFETF.NS'),
+            'BHARATBOND': ('Bharat Bond ETF April 2030', 'BHARATBOND.NS'),
+            'EBBETF0425': ('Edelweiss Bharat Bond ETF April 2025', 'EBBETF0425.NS'),
+            'EBBETF0430': ('Edelweiss Bharat Bond ETF April 2030', 'EBBETF0430.NS'),
+            'SDL26BEES': ('Nippon India ETF Nifty SDL 2026', 'SDL26BEES.NS'),
+            'GILT5YBEES': ('Nippon India ETF 5 Year Gilt', 'GILT5YBEES.NS'),
+            'GILT10YBEES': ('Nippon India ETF 10 Year Gilt', 'GILT10YBEES.NS'),
+            'PSUBNKBEES': ('Nippon PSU Bank Bees ETF', 'PSUBNKBEES.NS'),
+            'ITBEES': ('Nippon IT Bees ETF', 'ITBEES.NS'),
+            'AUTOBEES': ('Nippon Auto Bees ETF', 'AUTOBEES.NS'),
+            'PHARMABEES': ('Nippon Pharma Bees ETF', 'PHARMABEES.NS'),
+            'CONSUMBEES': ('Nippon Consumption Bees ETF', 'CONSUMBEES.NS'),
+            'INFRABEES': ('Nippon Infra Bees ETF', 'INFRABEES.NS'),
+            'MAFANG': ('Mirae Asset NYSE FANG Plus ETF', 'MAFANG.NS'),
+            'MON100': ('Motilal Oswal Nasdaq 100 ETF', 'MON100.NS'),
+            'MOM50': ('Motilal Oswal S&P 500 ETF', 'MOM50.NS'),
+            'MOVALUE': ('Motilal Oswal Nifty 200 Value 30 ETF', 'MOVALUE.NS'),
+            'MOLOWVOL': ('Motilal Oswal Nifty Low Volatility ETF', 'MOLOWVOL.NS'),
+            'ALPHA': ('Nippon Alpha ETF', 'ALPHA.NS'),
+            'QUAL30IETF': ('Quality 30 ETF', 'QUAL30IETF.NS'),
+            'MID150BEES': ('Nippon Nifty Midcap 150 ETF', 'MID150BEES.NS'),
+            'NEXT50IETF': ('Nifty Next 50 ETF', 'NEXT50IETF.NS'),
+            'AXISBNKETF': ('Axis Banking ETF', 'AXISBNKETF.NS'),
+            'AXISTECETF': ('Axis Nifty IT ETF', 'AXISTECETF.NS'),
+            'UTINEXT50': ('UTI Nifty Next 50 ETF', 'UTINEXT50.NS'),
+            'UTISXN50': ('UTI Sensex Next 50 ETF', 'UTISXN50.NS'),
+            'ICICINF100': ('ICICI Prudential Nifty 100 ETF', 'ICICINF100.NS'),
+            'ICICIBANKN': ('ICICI Prudential Bank ETF', 'ICICIBANKN.NS'),
+            'DSPN50ETF': ('DSP Nifty 50 ETF', 'DSPN50ETF.NS'),
+            'DSPQ50ETF': ('DSP Nifty Next 50 ETF', 'DSPQ50ETF.NS'),
+            'ABSLNN50ET': ('Aditya Birla Sun Life Nifty Next 50 ETF', 'ABSLNN50ET.NS'),
+            'HDFCSENSEX': ('HDFC Sensex ETF', 'HDFCSENSEX.NS'),
+            'SETFNN50': ('SBI Nifty Next 50 ETF', 'SETFNN50.NS'),
+            'SETFGILT': ('SBI 10 Year Gilt ETF', 'SETFGILT.NS'),
         },
     },
 
@@ -224,6 +292,106 @@ STOCKS = {
             'PLTR': ('Palantir', 'PLTR'),
             'SOFI': ('SoFi', 'SOFI'),
             'HOOD': ('Robinhood', 'HOOD'),
+            'BRK-B': ('Berkshire Hathaway Class B', 'BRK-B'),
+            'JNJ': ('Johnson & Johnson', 'JNJ'),
+            'PG': ('Procter & Gamble', 'PG'),
+            'XOM': ('Exxon Mobil', 'XOM'),
+            'CVX': ('Chevron', 'CVX'),
+            'LLY': ('Eli Lilly', 'LLY'),
+            'MRK': ('Merck', 'MRK'),
+            'PFE': ('Pfizer', 'PFE'),
+            'ABBV': ('AbbVie', 'ABBV'),
+            'UNH': ('UnitedHealth Group', 'UNH'),
+            'HD': ('Home Depot', 'HD'),
+            'COST': ('Costco', 'COST'),
+            'TMO': ('Thermo Fisher Scientific', 'TMO'),
+            'AVGO': ('Broadcom', 'AVGO'),
+            'QCOM': ('Qualcomm', 'QCOM'),
+            'TXN': ('Texas Instruments', 'TXN'),
+            'MU': ('Micron Technology', 'MU'),
+            'SHOP': ('Shopify', 'SHOP'),
+            'PANW': ('Palo Alto Networks', 'PANW'),
+            'CRWD': ('CrowdStrike', 'CRWD'),
+            'NOW': ('ServiceNow', 'NOW'),
+            'INTU': ('Intuit', 'INTU'),
+            'BKNG': ('Booking Holdings', 'BKNG'),
+            'CAT': ('Caterpillar', 'CAT'),
+            'DE': ('Deere & Company', 'DE'),
+            'GS': ('Goldman Sachs', 'GS'),
+            'MS': ('Morgan Stanley', 'MS'),
+            'C': ('Citigroup', 'C'),
+            'T': ('AT&T', 'T'),
+            'VZ': ('Verizon', 'VZ'),
+            'ARM': ('Arm Holdings ADR', 'ARM'),
+            'RIVN': ('Rivian Automotive', 'RIVN'),
+            'LCID': ('Lucid Group', 'LCID'),
+            'SQ': ('Block', 'SQ'),
+            'DDOG': ('Datadog', 'DDOG'),
+            'SNOW': ('Snowflake', 'SNOW'),
+            'NET': ('Cloudflare', 'NET'),
+            'MDB': ('MongoDB', 'MDB'),
+            'ADSK': ('Autodesk', 'ADSK'),
+            'CMCSA': ('Comcast', 'CMCSA'),
+            'TTD': ('Trade Desk', 'TTD'),
+            'PINS': ('Pinterest', 'PINS'),
+            'RBLX': ('Roblox', 'RBLX'),
+        },
+        'commodity': {
+            'GLD': ('SPDR Gold Shares ETF', 'GLD'),
+            'IAU': ('iShares Gold Trust', 'IAU'),
+            'GLDM': ('SPDR Gold MiniShares Trust', 'GLDM'),
+            'SLV': ('iShares Silver Trust', 'SLV'),
+            'SIVR': ('Aberdeen Standard Physical Silver Shares ETF', 'SIVR'),
+            'PPLT': ('Aberdeen Physical Platinum Shares ETF', 'PPLT'),
+            'PALL': ('Aberdeen Physical Palladium Shares ETF', 'PALL'),
+            'USO': ('United States Oil Fund', 'USO'),
+            'BNO': ('United States Brent Oil Fund', 'BNO'),
+            'UNG': ('United States Natural Gas Fund', 'UNG'),
+            'DBO': ('Invesco DB Oil Fund', 'DBO'),
+            'DBA': ('Invesco DB Agriculture Fund', 'DBA'),
+            'DBC': ('Invesco DB Commodity Index Tracking Fund', 'DBC'),
+            'COMT': ('iShares GSCI Commodity Dynamic Roll Strategy ETF', 'COMT'),
+            'PDBC': ('Invesco Optimum Yield Diversified Commodity Strategy', 'PDBC'),
+            'XLE': ('Energy Select Sector SPDR Fund', 'XLE'),
+            'XOP': ('SPDR S&P Oil & Gas Exploration & Production ETF', 'XOP'),
+            'COPX': ('Global X Copper Miners ETF', 'COPX'),
+            'CPER': ('United States Copper Index Fund', 'CPER'),
+            'URA': ('Global X Uranium ETF', 'URA'),
+            'LIT': ('Global X Lithium & Battery Tech ETF', 'LIT'),
+            'WEAT': ('Teucrium Wheat Fund', 'WEAT'),
+            'CORN': ('Teucrium Corn Fund', 'CORN'),
+            'SOYB': ('Teucrium Soybean Fund', 'SOYB'),
+            'JO': ('iPath Series B Bloomberg Coffee Subindex ETN', 'JO'),
+            'NIB': ('iPath Series B Bloomberg Cocoa Subindex ETN', 'NIB'),
+            'BAL': ('iPath Series B Bloomberg Cotton Subindex ETN', 'BAL'),
+            'SGG': ('iPath Series B Bloomberg Sugar Subindex ETN', 'SGG'),
+        },
+        'bonds': {
+            'BND': ('Vanguard Total Bond Market ETF', 'BND'),
+            'AGG': ('iShares Core U.S. Aggregate Bond ETF', 'AGG'),
+            'TLT': ('iShares 20+ Year Treasury Bond ETF', 'TLT'),
+            'IEF': ('iShares 7-10 Year Treasury Bond ETF', 'IEF'),
+            'SHY': ('iShares 1-3 Year Treasury Bond ETF', 'SHY'),
+            'VGIT': ('Vanguard Intermediate-Term Treasury ETF', 'VGIT'),
+            'VGLT': ('Vanguard Long-Term Treasury ETF', 'VGLT'),
+            'TIP': ('iShares TIPS Bond ETF', 'TIP'),
+            'SCHP': ('Schwab U.S. TIPS ETF', 'SCHP'),
+            'LQD': ('iShares iBoxx Investment Grade Corporate Bond ETF', 'LQD'),
+            'HYG': ('iShares iBoxx High Yield Corporate Bond ETF', 'HYG'),
+            'JNK': ('SPDR Bloomberg High Yield Bond ETF', 'JNK'),
+            'MUB': ('iShares National Muni Bond ETF', 'MUB'),
+            'BIL': ('SPDR Bloomberg 1-3 Month T-Bill ETF', 'BIL'),
+            'SGOV': ('iShares 0-3 Month Treasury Bond ETF', 'SGOV'),
+            'GOVT': ('iShares U.S. Treasury Bond ETF', 'GOVT'),
+            'MINT': ('PIMCO Enhanced Short Maturity Active ETF', 'MINT'),
+            'VCIT': ('Vanguard Intermediate-Term Corporate Bond ETF', 'VCIT'),
+            'VCSH': ('Vanguard Short-Term Corporate Bond ETF', 'VCSH'),
+            'BSV': ('Vanguard Short-Term Bond ETF', 'BSV'),
+            'BSVN': ('BondBloxx Bloomberg Seven Year Target Duration US Treasury ETF', 'BSVN'),
+            'EDV': ('Vanguard Extended Duration Treasury ETF', 'EDV'),
+            'HYLB': ('Xtrackers USD High Yield Corporate Bond ETF', 'HYLB'),
+            'ANGL': ('VanEck Fallen Angel High Yield Bond ETF', 'ANGL'),
+            'EMB': ('iShares J.P. Morgan USD Emerging Markets Bond ETF', 'EMB'),
         },
     },
 
@@ -252,7 +420,7 @@ STOCKS = {
 # Exchange label mapping for search results
 MARKET_EXCHANGE_LABELS = {
     'india': {'equity': 'NSE', 'commodity': 'NSE-COMM', 'bonds': 'NSE-BOND'},
-    'usa': {'equity': 'NYSE/NASDAQ'},
+    'usa': {'equity': 'NYSE/NASDAQ', 'commodity': 'NYSEARCA/ETF', 'bonds': 'NYSEARCA/BOND'},
     'crypto': {'all': 'CRYPTO'},
 }
 
@@ -266,8 +434,50 @@ def get_available_markets():
     """
     return {
         'india': ['equity', 'commodity', 'bonds'],
-        'usa': ['equity'],
+        'usa': ['equity', 'commodity', 'bonds'],
         'crypto': ['all'],
+    }
+
+
+def get_symbol_metadata(symbol):
+    """
+    Resolve a watchlist symbol to its configured market/category metadata.
+
+    Args:
+        symbol: Yahoo Finance symbol stored in the watchlist
+
+    Returns:
+        Dict with symbol, display_symbol, name, market, category, exchange.
+        Falls back to a best-effort market guess if the symbol is not in STOCKS.
+    """
+    for market, market_data in STOCKS.items():
+        for category, stock_dict in market_data.items():
+            for _, (name, yahoo_symbol) in stock_dict.items():
+                if yahoo_symbol == symbol:
+                    return {
+                        'symbol': symbol,
+                        'display_symbol': symbol.replace('.NS', '').replace('.BO', ''),
+                        'name': name,
+                        'market': market,
+                        'category': category,
+                        'exchange': MARKET_EXCHANGE_LABELS.get(market, {}).get(category, market.upper())
+                    }
+
+    if symbol.endswith('.NS') or symbol.endswith('.BO'):
+        fallback_market = 'india'
+    elif symbol.endswith('-USD'):
+        fallback_market = 'crypto'
+    else:
+        fallback_market = 'usa'
+
+    fallback_category = 'all' if fallback_market == 'crypto' else 'equity'
+    return {
+        'symbol': symbol,
+        'display_symbol': symbol.replace('.NS', '').replace('.BO', ''),
+        'name': symbol,
+        'market': fallback_market,
+        'category': fallback_category,
+        'exchange': MARKET_EXCHANGE_LABELS.get(fallback_market, {}).get(fallback_category, fallback_market.upper())
     }
 
 

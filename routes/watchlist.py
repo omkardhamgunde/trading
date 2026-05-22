@@ -1,5 +1,11 @@
 from flask import Blueprint, request, redirect, session, flash, render_template, url_for, jsonify
-from services.stock_service import search_stocks, get_stock_prices, get_available_markets, get_heatmap_data
+from services.stock_service import (
+    search_stocks,
+    get_stock_prices,
+    get_available_markets,
+    get_heatmap_data,
+    get_symbol_metadata
+)
 
 watchlist_bp = Blueprint('watchlist', __name__)
 
@@ -78,9 +84,17 @@ def watchlist():
     indices = ['^NSEI', '^IXIC', '^DJI', '^BSESN']
     index_prices = get_stock_prices(indices)
 
+    watchlist_items = [
+        {
+            'symbol': stock_symbol,
+            'metadata': get_symbol_metadata(stock_symbol)
+        }
+        for stock_symbol in stock_symbols
+    ]
+
     return render_template(
         'watchlist.html',
-        watchlist=watchlist_data,
+        watchlist=watchlist_items,
         prices=prices,
         index_prices=index_prices
     )

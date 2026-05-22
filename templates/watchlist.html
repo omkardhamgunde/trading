@@ -813,7 +813,7 @@
                         </div>
                     </div>
 
-                    <!-- Sub-Category Pills (visible when India is selected) -->
+                    <!-- Sub-Category Pills -->
                     <div class="category-pills" id="categoryPills" style="display: none;">
                         <span class="filter-label">Category:</span>
                         <div class="category-pill" data-category="equity" onclick="selectCategory('equity')">Equity</div>
@@ -836,12 +836,18 @@
 
                     <div class="divide-y divide-gray-700">
                         {% for stock in watchlist %}
-                        {% set stock_symbol = stock[0] %}
+                        {% set stock_symbol = stock.symbol %}
+                        {% set meta = stock.metadata %}
                         {% set data = prices[stock_symbol] %}
-                        <div class="watchlist-item stock-item" data-symbol="{{ stock_symbol }}">
+                        <div class="watchlist-item stock-item" data-symbol="{{ stock_symbol }}" data-market="{{ meta.market }}" data-category="{{ meta.category }}">
                             <div class="flex-1 flex items-center">
                                 <i class="fas fa-building text-xl mr-2 text-gray-400"></i>
-                                <span class="font-medium text-gray-200 text-lg">{{ stock_symbol }}</span>
+                                <div>
+                                    <span class="font-medium text-gray-200 text-lg">{{ meta.display_symbol }}</span>
+                                    <div class="text-sm text-gray-400">
+                                        {{ meta.name }}
+                                    </div>
+                                </div>
                             </div>
                             <div class="flex-1">
                                 <span class="stock-price">${{ data.price }}</span>
@@ -868,7 +874,7 @@
                                 {% endif %}
                             </div>
                             <div class="flex space-x-2">
-                                <button onclick="showChart('{{ stock_symbol.replace('.NS', '') }}')" class="action-button trade-button">
+                                <button onclick="showChart('{{ stock_symbol }}')" class="action-button trade-button">
                                     <i class="fas fa-chart-line"></i> Chart
                                 </button>
                                 <form action="/delete-watchlist/{{ stock_symbol }}" method="POST">
@@ -1015,9 +1021,9 @@
             pills.forEach(p => p.classList.remove('active'));
             document.querySelector(`.market-pill[data-market="${market}"]`).classList.add('active');
 
-            // Show sub-categories only for India
+            // Show sub-categories for markets that support equity/commodity/bonds
             catPills.forEach(p => p.classList.remove('active'));
-            if (market === 'india') {
+            if (market === 'india' || market === 'usa') {
                 catContainer.style.display = 'flex';
             } else {
                 catContainer.style.display = 'none';
@@ -1026,22 +1032,16 @@
             filterWatchlistItems();
         }
 
-        // Determine which market a symbol belongs to based on its suffix
-        function getSymbolMarket(symbol) {
-            if (symbol.endsWith('.NS') || symbol.endsWith('.BO')) return 'india';
-            if (symbol.endsWith('-USD')) return 'crypto';
-            return 'usa';
-        }
-
-        // Show/hide watchlist items based on selected market
+        // Show/hide watchlist items based on selected market/category
         function filterWatchlistItems() {
             document.querySelectorAll('.stock-item').forEach(item => {
-                const symbol = item.dataset.symbol;
-                if (!selectedMarket) {
-                    item.style.display = '';  // show all
-                } else {
-                    item.style.display = (getSymbolMarket(symbol) === selectedMarket) ? '' : 'none';
-                }
+                const itemMarket = item.dataset.market;
+                const itemCategory = item.dataset.category;
+
+                const marketMatches = !selectedMarket || itemMarket === selectedMarket;
+                const categoryMatches = !selectedCategory || itemCategory === selectedCategory;
+
+                item.style.display = (marketMatches && categoryMatches) ? '' : 'none';
             });
         }
 
@@ -1050,11 +1050,13 @@
             if (selectedCategory === category) {
                 selectedCategory = null;
                 catPills.forEach(p => p.classList.remove('active'));
+                filterWatchlistItems();
                 return;
             }
             selectedCategory = category;
             catPills.forEach(p => p.classList.remove('active'));
             document.querySelector(`.category-pill[data-category="${category}"]`).classList.add('active');
+            filterWatchlistItems();
         }
 
         function buildSearchUrl(query) {

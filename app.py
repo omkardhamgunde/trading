@@ -104,7 +104,7 @@ trading_bp = init_trading_routes(mysql)
 watchlist_bp = init_watchlist_routes(mysql)
 holdings_bp = init_holdings_routes(mysql)
 wallet_bp = init_wallet_routes(mysql)
-health_bp = init_health_routes()
+health_bp = init_health_routes(mysql)
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(trading_bp)

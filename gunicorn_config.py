@@ -11,7 +11,7 @@ backlog = 2048
 # Worker processes
 # Keep one worker unless you add a Socket.IO message queue such as Redis.
 workers = int(os.getenv("WEB_CONCURRENCY", "1"))
-worker_class = "gevent"
+worker_class = "geventwebsocket.gunicorn.workers.GeventWebSocketWorker"
 worker_connections = 1000
 timeout = 30
 keepalive = 2

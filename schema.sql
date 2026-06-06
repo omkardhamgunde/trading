@@ -13,10 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS wallet (
     user_id INT PRIMARY KEY,
     balance DECIMAL(15, 2) NOT NULL DEFAULT 10000.00,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_wallet_user
-        FOREIGN KEY (user_id) REFERENCES users(id)
-        ON DELETE CASCADE
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS watchlist (
@@ -24,9 +21,6 @@ CREATE TABLE IF NOT EXISTS watchlist (
     user_id INT NOT NULL,
     stock_symbol VARCHAR(50) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_watchlist_user
-        FOREIGN KEY (user_id) REFERENCES users(id)
-        ON DELETE CASCADE,
     UNIQUE KEY unique_user_stock (user_id, stock_symbol)
 );
 
@@ -37,10 +31,7 @@ CREATE TABLE IF NOT EXISTS trade_log (
     action VARCHAR(10) NOT NULL,
     quantity INT NOT NULL,
     price DECIMAL(15, 4) NOT NULL,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_trade_log_user
-        FOREIGN KEY (user_id) REFERENCES users(id)
-        ON DELETE CASCADE
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS wallet_transactions (
@@ -49,10 +40,7 @@ CREATE TABLE IF NOT EXISTS wallet_transactions (
     type VARCHAR(50) NOT NULL,
     amount DECIMAL(15, 2) NOT NULL,
     balance_after DECIMAL(15, 2) NOT NULL,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_wallet_transactions_user
-        FOREIGN KEY (user_id) REFERENCES users(id)
-        ON DELETE CASCADE
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS login_history (
@@ -62,8 +50,5 @@ CREATE TABLE IF NOT EXISTS login_history (
     ip_address VARCHAR(45),
     user_agent TEXT,
     status VARCHAR(20),
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_login_history_user
-        FOREIGN KEY (user_id) REFERENCES users(id)
-        ON DELETE SET NULL
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

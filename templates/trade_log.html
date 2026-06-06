@@ -266,15 +266,51 @@
     @media (max-width: 768px) {
         .trade-log-container {
             padding: 1rem;
+            overflow-x: hidden;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            line-height: 1.2;
+        }
+
+        .page-subtitle {
+            font-size: 1rem;
+        }
+
+        .trade-log-card {
+            padding: 1rem;
+            border-radius: 1rem;
+        }
+
+        .table-container {
+            margin: 0 -1rem;
+            padding: 0 1rem;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .trade-log-table {
             font-size: 0.9rem;
+            min-width: 760px;
         }
 
         .trade-log-table thead th,
         .trade-log-table tbody td {
             padding: 0.75rem 0.5rem;
+            white-space: nowrap;
+        }
+
+        .trade-log-table tbody tr:hover {
+            transform: none;
+        }
+
+        .action-bar {
+            justify-content: stretch;
+        }
+
+        .btn-modern {
+            width: 100%;
         }
     }
 </style>

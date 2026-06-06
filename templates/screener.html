@@ -140,6 +140,52 @@
         text-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
         font-weight: 500;
     }
+
+    @media (max-width: 768px) {
+        .screener-container {
+            padding: 0.75rem 0;
+            overflow-x: hidden;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            line-height: 1.2;
+            letter-spacing: 0;
+        }
+
+        .page-subtitle {
+            font-size: 1rem;
+            max-width: 95%;
+            margin: 0 auto;
+        }
+
+        .market-selectors {
+            overflow-x: auto;
+            padding-bottom: 0.35rem;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .market-selectors .btn-group {
+            display: inline-flex;
+            min-width: max-content;
+        }
+
+        .btn-glass {
+            padding: 0.65rem 0.9rem;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .heatmap-card {
+            min-height: 440px;
+            padding: 0.75rem;
+            border-radius: 1rem;
+        }
+
+        #heatmapChart {
+            min-height: 400px;
+        }
+    }
 </style>
 {% endblock %}
 

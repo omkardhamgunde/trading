@@ -72,4 +72,38 @@
         </div>
     </div>
 </div>
+
+<style>
+    @media (max-width: 768px) {
+        .container.mt-4 {
+            padding-left: 1rem;
+            padding-right: 1rem;
+            overflow-x: hidden;
+        }
+
+        .container.mt-4 h2 {
+            font-size: 1.65rem;
+            line-height: 1.2;
+        }
+
+        .container.mt-4 .btn-outline-danger {
+            width: 100%;
+            margin-top: 0.75rem;
+            white-space: normal;
+        }
+
+        .table-responsive {
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .table-responsive table {
+            min-width: 760px;
+        }
+
+        .table-responsive th,
+        .table-responsive td {
+            white-space: nowrap;
+        }
+    }
+</style>
 {% endblock %}

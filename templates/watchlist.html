@@ -651,7 +651,205 @@
             .stats-overview { grid-template-columns: repeat(2, 1fr); }
             .ticker-tape { display: none; }
             .navbar-modern { top: 0 !important; }
-            .dashboard-container { padding-top: 6rem !important; }
+            body {
+                font-size: 16px;
+                overflow-x: hidden;
+            }
+
+            body::before,
+            body::after,
+            #particleCanvas {
+                display: none;
+            }
+
+            .dashboard-container {
+                padding: 1rem;
+                padding-top: 7.5rem !important;
+                width: 100%;
+                max-width: 100%;
+            }
+
+            .nav-container {
+                padding: 0 0.75rem;
+            }
+
+            .nav-content {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .nav-brand {
+                font-size: 1.15rem;
+                line-height: 1.2;
+            }
+
+            .nav-links,
+            .nav-links-right {
+                width: 100%;
+                overflow-x: auto;
+                gap: 0.35rem;
+                padding-bottom: 0.25rem;
+                scrollbar-width: none;
+            }
+
+            .nav-links::-webkit-scrollbar,
+            .nav-links-right::-webkit-scrollbar {
+                display: none;
+            }
+
+            .nav-link {
+                flex: 0 0 auto;
+                padding: 0.45rem 0.7rem;
+                font-size: 0.85rem;
+                white-space: nowrap;
+            }
+
+            .market-clock {
+                display: none;
+            }
+
+            .card {
+                padding: 1rem;
+                border-radius: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            .stats-overview {
+                gap: 0.75rem;
+                margin-bottom: 1rem;
+            }
+
+            .stat-card {
+                padding: 1rem;
+                border-radius: 0.85rem;
+            }
+
+            .stat-card .stat-icon {
+                width: 34px;
+                height: 34px;
+                font-size: 0.95rem;
+                margin-bottom: 0.55rem;
+            }
+
+            .stat-card .stat-label {
+                font-size: 0.66rem;
+                letter-spacing: 0.4px;
+            }
+
+            .stat-card .stat-value {
+                font-size: 1.15rem;
+                word-break: break-word;
+            }
+
+            .stat-card .stat-sub {
+                font-size: 0.66rem;
+            }
+
+            .index-section {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 0.75rem;
+            }
+
+            .index-card {
+                padding: 1rem 0.65rem;
+                border-radius: 0.85rem;
+            }
+
+            .index-name {
+                font-size: 0.82rem;
+            }
+
+            .index-value {
+                font-size: 1.1rem;
+            }
+
+            .market-filter-bar,
+            .category-pills {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                padding-bottom: 0.25rem;
+                scrollbar-width: none;
+            }
+
+            .market-filter-bar::-webkit-scrollbar,
+            .category-pills::-webkit-scrollbar {
+                display: none;
+            }
+
+            .filter-label,
+            .market-pill,
+            .category-pill {
+                flex: 0 0 auto;
+                white-space: nowrap;
+            }
+
+            #addStockForm {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            #addStockForm input,
+            #addStockForm button,
+            .quick-trade-card input,
+            .quick-trade-card select,
+            .quick-trade-card button {
+                width: 100%;
+                margin-right: 0;
+            }
+
+            .watchlist-item {
+                grid-template-columns: 1fr;
+                gap: 0.8rem;
+                padding: 1rem;
+                align-items: stretch;
+            }
+
+            .watchlist-item > div {
+                width: 100%;
+            }
+
+            .watchlist-item .stock-price {
+                display: inline-block;
+                font-size: 1.05rem;
+            }
+
+            .watchlist-item .flex.space-x-2 {
+                display: grid;
+                grid-template-columns: 1fr auto;
+                gap: 0.6rem;
+            }
+
+            .watchlist-item .action-button {
+                width: 100%;
+                padding: 0.75rem 0.8rem;
+            }
+
+            #chartModal > div {
+                align-items: stretch;
+                padding: 0.5rem;
+            }
+
+            #chartModal > div > div {
+                height: 82vh !important;
+                border-radius: 0.75rem;
+            }
+
+            #chartModal h3 {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .stats-overview,
+            .index-section {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-container {
+                padding-left: 0.75rem;
+                padding-right: 0.75rem;
+            }
         }
     </style>
 </head>

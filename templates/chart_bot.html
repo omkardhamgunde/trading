@@ -417,8 +417,18 @@
     }
 
     @media (max-width: 768px) {
+        .chart-bot-page {
+            padding: 0.75rem 0 2rem;
+            overflow-x: hidden;
+        }
+
         .page-header {
             display: block;
+        }
+
+        .page-header h1 {
+            font-size: 2rem;
+            line-height: 1.2;
         }
 
         .disclaimer {
@@ -439,6 +449,26 @@
 
         .summary-item:last-child {
             border-bottom: none;
+        }
+
+        .control-group select,
+        .run-button,
+        .watch-button,
+        .signal-actions form {
+            width: 100%;
+        }
+
+        .signal-row {
+            padding: 1rem;
+        }
+
+        .signal-main {
+            align-items: flex-start;
+        }
+
+        .rank {
+            min-width: 38px;
+            height: 38px;
         }
     }
 </style>

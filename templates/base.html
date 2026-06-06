@@ -141,6 +141,48 @@
         ::-webkit-scrollbar-thumb:hover {
             background: rgba(102, 126, 234, 0.6);
         }
+
+        @media (max-width: 768px) {
+            body {
+                padding-top: 66px;
+                overflow-x: hidden;
+            }
+
+            .navbar {
+                padding: 0.55rem 0;
+            }
+
+            .navbar .container {
+                padding-left: 0.9rem;
+                padding-right: 0.9rem;
+            }
+
+            .navbar-brand {
+                font-size: 1.1rem;
+                max-width: calc(100vw - 82px);
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .navbar-collapse {
+                max-height: calc(100vh - 72px);
+                overflow-y: auto;
+                padding-top: 0.75rem;
+            }
+
+            .nav-link {
+                margin: 0.15rem 0;
+                padding: 0.65rem 0.8rem !important;
+            }
+
+            .container {
+                width: 100%;
+                max-width: 100%;
+                padding-left: 0.9rem;
+                padding-right: 0.9rem;
+            }
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>

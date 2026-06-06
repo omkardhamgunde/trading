@@ -166,6 +166,39 @@
             color: #4f46e5;
             text-decoration: underline;
         }
+
+        @media (max-width: 640px) {
+            body {
+                align-items: flex-start;
+                padding: 1rem 0;
+            }
+
+            .signup-container {
+                max-width: calc(100vw - 2rem);
+                padding: 1.75rem 1.25rem;
+                border-radius: 1rem;
+                margin: 0.5rem 1rem;
+            }
+
+            .signup-title {
+                font-size: 1.8rem;
+            }
+
+            .signup-subtitle {
+                font-size: 0.95rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .form-group {
+                margin-bottom: 1.15rem;
+            }
+
+            .form-input {
+                font-size: 1rem;
+                padding-top: 0.85rem;
+                padding-bottom: 0.85rem;
+            }
+        }
     </style>
 </head>
 <body>

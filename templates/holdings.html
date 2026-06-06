@@ -447,13 +447,58 @@
             padding: 1rem;
         }
 
+        .page-title {
+            font-size: 1.8rem;
+        }
+
+        .page-subtitle {
+            font-size: 0.95rem;
+        }
+
+        .stats-overview {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.75rem;
+        }
+
+        .stat-card {
+            padding: 1rem;
+        }
+
+        .stat-value {
+            font-size: 1.15rem;
+            word-break: break-word;
+        }
+
+        .chart-card,
+        .holdings-card {
+            padding: 1rem;
+            border-radius: 1rem;
+        }
+
+        .canvas-container {
+            min-height: 260px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
         .holdings-table {
             font-size: 0.9rem;
+            min-width: 780px;
         }
 
         .holdings-table thead th,
         .holdings-table tbody td {
             padding: 0.75rem 0.5rem;
+            white-space: nowrap;
+        }
+    }
+
+    @media (max-width: 420px) {
+        .stats-overview {
+            grid-template-columns: 1fr;
         }
     }
 </style>

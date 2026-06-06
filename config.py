@@ -25,8 +25,14 @@ class Config:
     MYSQL_USER = os.getenv('MYSQL_USER', 'root')
     MYSQL_PASSWORD = os.getenv('MYSQL_PASSWORD')
     MYSQL_DB = os.getenv('MYSQL_DB', 'trading_website')
-    MYSQL_SSL = os.getenv('MYSQL_SSL', 'False').lower() == 'true'
-    MYSQL_SSL_CA = os.getenv('MYSQL_SSL_CA')
+    MYSQL_SSL = os.getenv(
+        'MYSQL_SSL',
+        'True' if 'tidbcloud.com' in MYSQL_HOST else 'False'
+    ).lower() == 'true'
+    MYSQL_SSL_CA = os.getenv(
+        'MYSQL_SSL_CA',
+        '/etc/ssl/certs/ca-certificates.crt' if MYSQL_SSL else None
+    )
     MYSQL_SSL_VERIFY_CERT = os.getenv('MYSQL_SSL_VERIFY_CERT', 'True').lower() == 'true'
     MYSQL_SSL_VERIFY_IDENTITY = os.getenv('MYSQL_SSL_VERIFY_IDENTITY', 'True').lower() == 'true'
     

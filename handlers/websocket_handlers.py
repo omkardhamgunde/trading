@@ -223,11 +223,11 @@ def init_websocket_handlers(socketio, app, mysql):
                             
                             cursor.close()
                 
-                # Update every 10 seconds
-                socketio.sleep(10)
+                # Free hosts can share IPs that are aggressively throttled by market-data providers.
+                socketio.sleep(60)
                 
             except Exception as e:
                 logger.error(f"Error in background updater: {e}", exc_info=True)
-                socketio.sleep(10)
+                socketio.sleep(60)
     
     return background_price_updater

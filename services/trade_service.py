@@ -6,6 +6,7 @@ from datetime import datetime
 import logging
 import time
 from utils.metrics import metrics_tracker
+from utils.currency import convert_price_to_usd
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ def get_current_stock_price(symbol):
             metrics_tracker.record_api_call()
             return None
         
-        price = float(stock_data['Close'].iloc[-1])
+        price = convert_price_to_usd(symbol, stock_data['Close'].iloc[-1])
         
         # Record API call with duration
         duration_ms = (time.time() - start_time) * 1000

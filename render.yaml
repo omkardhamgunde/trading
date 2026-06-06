@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: trading-dashboard
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --config gunicorn_config.py wsgi:application
+    healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: FLASK_ENV
+        value: production
+      - key: SESSION_COOKIE_SECURE
+        value: "True"
+      - key: OAUTHLIB_INSECURE_TRANSPORT
+        value: "0"
+      - key: WEB_CONCURRENCY
+        value: "1"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: MYSQL_HOST
+        sync: false
+      - key: MYSQL_PORT
+        sync: false
+      - key: MYSQL_USER
+        sync: false
+      - key: MYSQL_PASSWORD
+        sync: false
+      - key: MYSQL_DB
+        sync: false
+      - key: MYSQL_SSL
+        value: "True"
+      - key: MYSQL_SSL_CA
+        value: /etc/ssl/certs/ca-certificates.crt
+      - key: MYSQL_SSL_VERIFY_CERT
+        value: "True"
+      - key: MYSQL_SSL_VERIFY_IDENTITY
+        value: "True"

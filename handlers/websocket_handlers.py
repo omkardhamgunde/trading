@@ -7,6 +7,7 @@ from datetime import datetime
 from services.stock_service import get_stock_prices
 from services.holdings_service import calculate_holdings
 import logging
+import math
 
 # Store active connections
 active_connections = {}
@@ -168,23 +169,29 @@ def init_websocket_handlers(socketio, app, mysql):
                                 # Calculate P/L for each holding
                                 holdings_data = []
                                 for symbol in holdings_symbols:
-                                    if holdings_prices[symbol]['price'] != 'N/A':
-                                        avg_price = holdings_dict[symbol]['total_cost'] / holdings_dict[symbol]['quantity']
-                                        current_price = holdings_prices[symbol]['price']
-                                        quantity = holdings_dict[symbol]['quantity']
-                                        total_value = current_price * quantity
-                                        profit_loss = total_value - (avg_price * quantity)
-                                        profit_loss_percent = (profit_loss / (avg_price * quantity)) * 100
+                                    price_val = holdings_prices[symbol]['price']
+                                    avg_price = holdings_dict[symbol]['total_cost'] / holdings_dict[symbol]['quantity']
+                                    
+                                    if price_val != 'N/A' and isinstance(price_val, (int, float)) and not math.isnan(price_val):
+                                        current_price = float(price_val)
+                                    else:
+                                        # Fallback to avg_price to keep the holding in the list
+                                        current_price = avg_price
                                         
-                                        holdings_data.append({
-                                            'symbol': symbol,
-                                            'quantity': quantity,
-                                            'avg_price': round(avg_price, 2),
-                                            'current_price': current_price,
-                                            'total_value': round(total_value, 2),
-                                            'profit_loss': round(profit_loss, 2),
-                                            'profit_loss_percent': round(profit_loss_percent, 2)
-                                        })
+                                    quantity = holdings_dict[symbol]['quantity']
+                                    total_value = current_price * quantity
+                                    profit_loss = total_value - (avg_price * quantity)
+                                    profit_loss_percent = (profit_loss / (avg_price * quantity)) * 100 if avg_price > 0 else 0
+                                    
+                                    holdings_data.append({
+                                        'symbol': symbol,
+                                        'quantity': quantity,
+                                        'avg_price': round(avg_price, 2),
+                                        'current_price': current_price,
+                                        'total_value': round(total_value, 2),
+                                        'profit_loss': round(profit_loss, 2),
+                                        'profit_loss_percent': round(profit_loss_percent, 2)
+                                    })
                                 
                                 # Emit to clients subscribed to holdings
                                 disconnected_sids = []

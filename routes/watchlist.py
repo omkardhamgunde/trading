@@ -6,6 +6,7 @@ from services.stock_service import (
     get_heatmap_data,
     get_symbol_metadata
 )
+from services.chart_bot_service import get_chart_bot_recommendations
 
 watchlist_bp = Blueprint('watchlist', __name__)
 
@@ -39,6 +40,29 @@ def screener():
     # Initial page load with default market
     initial_data = get_heatmap_data(market)
     return render_template('screener.html', initial_data=initial_data, current_market=market)
+
+
+@watchlist_bp.route('/chart-bot')
+def chart_bot():
+    """Render simple chart-bot stock suggestions."""
+    if 'user_id' not in session:
+        return redirect(url_for('auth.login'))
+
+    market = request.args.get('market', 'india').strip().lower()
+    category = request.args.get('category', 'equity').strip().lower()
+    scan_limit = request.args.get('scan_limit', 25, type=int)
+
+    bot_result = get_chart_bot_recommendations(
+        market=market,
+        category=category,
+        scan_limit=scan_limit
+    )
+
+    return render_template(
+        'chart_bot.html',
+        bot_result=bot_result,
+        markets=get_available_markets()
+    )
 
 
 @watchlist_bp.route('/watchlist', methods=['GET', 'POST'])
@@ -115,3 +139,34 @@ def delete_watchlist(stock_symbol):
     watchlist_bp.mysql.connection.commit()
     flash(f'Stock {stock_symbol} removed from your watchlist.', 'success')
     return redirect(url_for('watchlist.watchlist'))
+
+
+@watchlist_bp.route('/security')
+def security_log():
+    """Render the Security Activity Dashboard showing recent login events."""
+    if 'user_id' not in session:
+        return redirect(url_for('auth.login'))
+
+    user_id = session['user_id']
+    cursor = watchlist_bp.mysql.connection.cursor()
+    
+    # Fetch recent login events for the active user
+    cursor.execute("""
+        SELECT ip_address, user_agent, status, timestamp 
+        FROM login_history 
+        WHERE user_id = %s 
+        ORDER BY timestamp DESC 
+        LIMIT 50
+    """, [user_id])
+    
+    # Map tuples to dictionaries
+    events = []
+    for row in cursor.fetchall():
+        events.append({
+            'ip_address': row[0],
+            'user_agent': row[1],
+            'status': row[2],
+            'timestamp': row[3]
+        })
+        
+    return render_template('security_log.html', events=events)

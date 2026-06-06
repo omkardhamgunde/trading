@@ -8,6 +8,7 @@ import logging
 import time
 from utils.cache import price_cache, api_cache
 from utils.metrics import metrics_tracker
+from utils.currency import convert_price_to_usd
 
 logger = logging.getLogger(__name__)
 
@@ -565,7 +566,7 @@ def get_stock_price(symbol):
             metrics_tracker.record_api_call()
             return None
         
-        price = float(stock_data['Close'].iloc[-1])
+        price = convert_price_to_usd(symbol, stock_data['Close'].iloc[-1])
         
         # Cache the result
         price_cache.set(cache_key, price, ttl=10)
@@ -634,7 +635,7 @@ def get_stock_prices(symbols):
                     prices[symbol] = {'price': 'N/A', 'change': 'N/A', 'change_percent': 'N/A'}
                     continue
                 
-                current_price = float(current_price)
+                current_price = convert_price_to_usd(symbol, current_price)
                 
                 # Calculate change if we have at least 2 rows
                 if len(hist) >= 2:
@@ -645,7 +646,7 @@ def get_stock_prices(symbols):
                         change = 0.0
                         change_percent = 0.0
                     else:
-                        prev_close = float(prev_close)
+                        prev_close = convert_price_to_usd(symbol, prev_close)
                         change = current_price - prev_close
                         change_percent = (change / prev_close) * 100 if prev_close != 0 else 0.0
                 else:

@@ -1,0 +1,445 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="chart-bot-page">
+    <div class="page-header">
+        <div>
+            <p class="eyebrow">Simulator Signals</p>
+            <h1>Chart Bot</h1>
+            <p class="subtitle">Educational signals based on moving averages, RSI, momentum, and volatility.</p>
+        </div>
+        <div class="disclaimer">
+            Not financial advice. Use this only for simulated trading decisions.
+        </div>
+    </div>
+
+    <form method="GET" action="{{ url_for('watchlist.chart_bot') }}" class="control-bar">
+        <div class="control-group">
+            <label for="market">Market</label>
+            <select id="market" name="market">
+                {% for market_name, categories in markets.items() %}
+                <option value="{{ market_name }}" {% if bot_result.market == market_name %}selected{% endif %}>
+                    {{ market_name|upper }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="control-group">
+            <label for="category">Category</label>
+            <select id="category" name="category">
+                {% for category_name in bot_result.available_categories %}
+                <option value="{{ category_name }}" {% if bot_result.category == category_name %}selected{% endif %}>
+                    {{ category_name|replace('_', ' ')|title }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="control-group">
+            <label for="scan_limit">Scan</label>
+            <select id="scan_limit" name="scan_limit">
+                {% for limit in [10, 25, 40, 60] %}
+                <option value="{{ limit }}" {% if bot_result.scan_limit == limit %}selected{% endif %}>{{ limit }} symbols</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="run-button">
+            <i class="fas fa-robot"></i>
+            Run Bot
+        </button>
+    </form>
+
+    <div class="summary-row">
+        <div class="summary-item">
+            <span>Market</span>
+            <strong>{{ bot_result.market|upper }}</strong>
+        </div>
+        <div class="summary-item">
+            <span>Category</span>
+            <strong>{{ bot_result.category|replace('_', ' ')|title }}</strong>
+        </div>
+        <div class="summary-item">
+            <span>Analyzed</span>
+            <strong>{{ bot_result.analyzed_count }}</strong>
+        </div>
+    </div>
+
+    {% if bot_result.recommendations %}
+    <div class="signal-list">
+        {% for item in bot_result.recommendations %}
+        <article class="signal-row signal-{{ item.strength }}">
+            <div class="signal-main">
+                <div class="rank">#{{ loop.index }}</div>
+                <div>
+                    <h2>{{ item.symbol }}</h2>
+                    <p>{{ item.name }}</p>
+                    <div class="tags">
+                        <span>{{ item.exchange }}</span>
+                        <span>{{ item.category|replace('_', ' ')|title }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metric-grid">
+                <div>
+                    <span>Signal</span>
+                    <strong>{{ item.recommendation }}</strong>
+                </div>
+                <div>
+                    <span>Score</span>
+                    <strong>{{ item.score }}/10</strong>
+                </div>
+                <div>
+                    <span>Price</span>
+                    <strong>{{ "%.2f"|format(item.current_price) }}</strong>
+                </div>
+                <div>
+                    <span>30D</span>
+                    <strong class="{{ 'positive' if item.return_30d >= 0 else 'negative' }}">
+                        {{ "%+.2f"|format(item.return_30d) }}%
+                    </strong>
+                </div>
+                <div>
+                    <span>RSI</span>
+                    <strong>{{ item.rsi if item.rsi is not none else 'N/A' }}</strong>
+                </div>
+                <div>
+                    <span>Volatility</span>
+                    <strong>{{ "%.2f"|format(item.volatility) }}%</strong>
+                </div>
+            </div>
+
+            <div class="reason-list">
+                {% for reason in item.reasons %}
+                <span>{{ reason }}</span>
+                {% endfor %}
+            </div>
+
+            <div class="signal-actions">
+                <form method="POST" action="{{ url_for('watchlist.watchlist') }}">
+                    <input type="hidden" name="stock_symbol" value="{{ item.symbol }}">
+                    <button type="submit" class="watch-button">
+                        <i class="fas fa-plus"></i>
+                        Watchlist
+                    </button>
+                </form>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-chart-line"></i>
+        <h2>No signals found</h2>
+        <p>Try a larger scan or a different market category.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    const categoryMap = {{ markets | tojson }};
+    const marketSelect = document.getElementById('market');
+    const categorySelect = document.getElementById('category');
+
+    marketSelect.addEventListener('change', function() {
+        const categories = categoryMap[this.value] || [];
+        categorySelect.innerHTML = categories.map(category => {
+            const label = category.replace('_', ' ').replace(/\b\w/g, char => char.toUpperCase());
+            return `<option value="${category}">${label}</option>`;
+        }).join('');
+    });
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chart-bot-page {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 1rem 0 3rem;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 1.5rem;
+        align-items: flex-end;
+        margin-bottom: 1.25rem;
+    }
+
+    .eyebrow {
+        margin: 0 0 0.35rem;
+        color: #7dd3fc;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        font-weight: 700;
+    }
+
+    .page-header h1 {
+        margin: 0;
+        font-size: 2.4rem;
+        font-weight: 800;
+    }
+
+    .subtitle,
+    .disclaimer {
+        margin: 0.35rem 0 0;
+        color: rgba(255, 255, 255, 0.66);
+    }
+
+    .disclaimer {
+        max-width: 340px;
+        padding: 0.75rem 1rem;
+        border: 1px solid rgba(251, 191, 36, 0.28);
+        border-radius: 8px;
+        background: rgba(251, 191, 36, 0.08);
+        color: #fde68a;
+        font-size: 0.9rem;
+    }
+
+    .control-bar,
+    .summary-row,
+    .signal-row,
+    .empty-state {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.045);
+    }
+
+    .control-bar {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(160px, 1fr)) auto;
+        gap: 1rem;
+        align-items: end;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .control-group label {
+        display: block;
+        margin-bottom: 0.4rem;
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .control-group select {
+        width: 100%;
+        padding: 0.8rem 0.9rem;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 8px;
+        background: #111827;
+        color: white;
+    }
+
+    .run-button,
+    .watch-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .run-button {
+        min-height: 48px;
+        padding: 0 1.25rem;
+        background: #2563eb;
+    }
+
+    .summary-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        margin-bottom: 1rem;
+        overflow: hidden;
+    }
+
+    .summary-item {
+        padding: 1rem;
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .summary-item:last-child {
+        border-right: none;
+    }
+
+    .summary-item span,
+    .metric-grid span {
+        display: block;
+        color: rgba(255, 255, 255, 0.52);
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .summary-item strong {
+        display: block;
+        margin-top: 0.25rem;
+        font-size: 1.2rem;
+    }
+
+    .signal-list {
+        display: grid;
+        gap: 0.85rem;
+    }
+
+    .signal-row {
+        display: grid;
+        grid-template-columns: minmax(260px, 1fr) minmax(420px, 1.35fr) minmax(220px, 0.9fr) auto;
+        gap: 1rem;
+        align-items: center;
+        padding: 1rem;
+        border-left: 4px solid #64748b;
+    }
+
+    .signal-strong {
+        border-left-color: #22c55e;
+    }
+
+    .signal-good {
+        border-left-color: #38bdf8;
+    }
+
+    .signal-neutral {
+        border-left-color: #f59e0b;
+    }
+
+    .signal-weak {
+        border-left-color: #ef4444;
+    }
+
+    .signal-main {
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+    }
+
+    .rank {
+        min-width: 44px;
+        height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.08);
+        font-weight: 800;
+    }
+
+    .signal-main h2 {
+        margin: 0;
+        font-size: 1.18rem;
+        font-weight: 800;
+    }
+
+    .signal-main p {
+        margin: 0.1rem 0 0;
+        color: rgba(255, 255, 255, 0.62);
+        font-size: 0.92rem;
+    }
+
+    .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+        margin-top: 0.45rem;
+    }
+
+    .tags span,
+    .reason-list span {
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.76);
+        padding: 0.25rem 0.55rem;
+        font-size: 0.78rem;
+    }
+
+    .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(86px, 1fr));
+        gap: 0.7rem;
+    }
+
+    .metric-grid strong {
+        display: block;
+        margin-top: 0.18rem;
+        font-size: 0.98rem;
+    }
+
+    .positive {
+        color: #22c55e;
+    }
+
+    .negative {
+        color: #ef4444;
+    }
+
+    .reason-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+
+    .watch-button {
+        min-height: 42px;
+        padding: 0 0.9rem;
+        background: #16a34a;
+        white-space: nowrap;
+    }
+
+    .empty-state {
+        padding: 4rem 1rem;
+        text-align: center;
+    }
+
+    .empty-state i {
+        color: #38bdf8;
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state h2 {
+        margin: 0;
+        font-size: 1.35rem;
+    }
+
+    .empty-state p {
+        color: rgba(255, 255, 255, 0.62);
+    }
+
+    @media (max-width: 1100px) {
+        .signal-row {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .page-header {
+            display: block;
+        }
+
+        .disclaimer {
+            margin-top: 1rem;
+            max-width: none;
+        }
+
+        .control-bar,
+        .summary-row,
+        .metric-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .summary-item {
+            border-right: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+    }
+</style>
+{% endblock %}

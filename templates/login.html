@@ -326,7 +326,7 @@
         </div>
         
         <div class="signup-link">
-            Don't have an account? <a href="#">Sign up</a>
+            Don't have an account? <a href="{{ url_for('auth.signup') }}">Sign up</a>
         </div>
     </div>
     
@@ -349,6 +349,23 @@
                     // No need to prevent default as we want the link to work normally
                     // The server will handle the OAuth flow
                 });
+            }
+        });
+
+        // Prevent double form submissions by disabling the button instantly
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const submitBtn = document.querySelector('.submit-button');
+            if (submitBtn) {
+                // If already processing, prevent extra submits
+                if (submitBtn.dataset.processing) {
+                    e.preventDefault();
+                    return;
+                }
+                submitBtn.dataset.processing = "true";
+                submitBtn.value = "Authenticating...";
+                submitBtn.style.opacity = "0.7";
+                submitBtn.style.cursor = "not-allowed";
+                submitBtn.style.pointerEvents = "none";
             }
         });
     </script>

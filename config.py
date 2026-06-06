@@ -21,9 +21,14 @@ class Config:
     
     # MySQL Configuration
     MYSQL_HOST = os.getenv('MYSQL_HOST', '127.0.0.1')
+    MYSQL_PORT = int(os.getenv('MYSQL_PORT', '3306'))
     MYSQL_USER = os.getenv('MYSQL_USER', 'root')
     MYSQL_PASSWORD = os.getenv('MYSQL_PASSWORD')
     MYSQL_DB = os.getenv('MYSQL_DB', 'trading_website')
+    MYSQL_SSL = os.getenv('MYSQL_SSL', 'False').lower() == 'true'
+    MYSQL_SSL_CA = os.getenv('MYSQL_SSL_CA')
+    MYSQL_SSL_VERIFY_CERT = os.getenv('MYSQL_SSL_VERIFY_CERT', 'True').lower() == 'true'
+    MYSQL_SSL_VERIFY_IDENTITY = os.getenv('MYSQL_SSL_VERIFY_IDENTITY', 'True').lower() == 'true'
     
     # Google OAuth Configuration
     GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
@@ -38,17 +43,31 @@ class Config:
     @staticmethod
     def get_mysql_config():
         """Get MySQL configuration dictionary."""
+        pymysql_kwargs = {
+            'user': Config.MYSQL_USER,
+            'password': Config.MYSQL_PASSWORD,
+            'db': Config.MYSQL_DB,
+            'host': Config.MYSQL_HOST,
+            'port': Config.MYSQL_PORT
+        }
+
+        if Config.MYSQL_SSL:
+            pymysql_kwargs.update({
+                'ssl_verify_cert': Config.MYSQL_SSL_VERIFY_CERT,
+                'ssl_verify_identity': Config.MYSQL_SSL_VERIFY_IDENTITY
+            })
+            if Config.MYSQL_SSL_CA:
+                pymysql_kwargs['ssl_ca'] = Config.MYSQL_SSL_CA
+            else:
+                pymysql_kwargs['ssl'] = {}
+
         return {
             'MYSQL_HOST': Config.MYSQL_HOST,
+            'MYSQL_PORT': Config.MYSQL_PORT,
             'MYSQL_USER': Config.MYSQL_USER,
             'MYSQL_PASSWORD': Config.MYSQL_PASSWORD,
             'MYSQL_DB': Config.MYSQL_DB,
-            'pymysql_kwargs': {
-                'user': Config.MYSQL_USER,
-                'password': Config.MYSQL_PASSWORD,
-                'db': Config.MYSQL_DB,
-                'host': Config.MYSQL_HOST
-            }
+            'pymysql_kwargs': pymysql_kwargs
         }
     
     @staticmethod

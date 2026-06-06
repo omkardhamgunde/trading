@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h2 class="fw-bold mb-1" style="background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Security & Devices</h2>
+            <p class="text-muted" style="font-size: 0.95rem;">Review your recent account activity and login history.</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <button class="btn btn-outline-danger" onclick="alert('In a production environment, this would cleanly terminate all other active sessions.')"> <i class="fas fa-sign-out-alt"></i> Sign Out All Devices</button>
+        </div>
+    </div>
+
+    <!-- Security Activity Card -->
+    <div class="card shadow-lg border-0" style="background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border-radius: 16px; overflow: hidden;">
+        <div class="card-header border-0 py-3" style="background: rgba(15, 23, 42, 0.5);">
+            <h5 class="mb-0 fw-bold"><i class="fas fa-shield-alt text-warning me-2"></i> Access Logs</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-borderless text-light mb-0 align-middle">
+                    <thead style="background: rgba(51, 65, 85, 0.4); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                        <tr>
+                            <th class="ps-4 py-3 text-muted">Status</th>
+                            <th class="py-3 text-muted">Device / Browser Header</th>
+                            <th class="py-3 text-muted">IP Address</th>
+                            <th class="pe-4 py-3 text-muted text-end">Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if events %}
+                            {% for event in events %}
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <td class="ps-4 py-3">
+                                    {% if event.status == 'Success' %}
+                                        <span class="badge rounded-pill bg-success px-3 py-2" style="background: rgba(16, 185, 129, 0.2) !important; color: #34d399 !important; border: 1px solid rgba(16, 185, 129, 0.3);">
+                                            <i class="fas fa-check-circle me-1"></i> Success
+                                        </span>
+                                    {% else %}
+                                        <span class="badge rounded-pill bg-danger px-3 py-2" style="background: rgba(239, 68, 68, 0.2) !important; color: #f87171 !important; border: 1px solid rgba(239, 68, 68, 0.3);">
+                                            <i class="fas fa-times-circle me-1"></i> Blocked
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="py-3">
+                                    <div class="fw-bold" style="font-size: 0.95rem;">
+                                        {% if 'Windows' in event.user_agent %}<i class="fab fa-windows text-info me-2"></i>{% elif 'Mac' in event.user_agent %}<i class="fab fa-apple text-secondary me-2"></i>{% elif 'Linux' in event.user_agent %}<i class="fab fa-linux text-warning me-2"></i>{% else %}<i class="fas fa-desktop text-muted me-2"></i>{% endif %}
+                                        Session Client
+                                    </div>
+                                    <small class="text-muted" style="font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; max-width: 250px; display: inline-block; white-space: nowrap;">{{ event.user_agent }}</small>
+                                </td>
+                                <td class="py-3 font-monospace" style="color: #94a3b8; font-size: 0.9rem;">
+                                    <i class="fas fa-network-wired me-2 opacity-50"></i>{{ event.ip_address }}
+                                </td>
+                                <td class="pe-4 py-3 text-end" style="color: #cbd5e1; font-size: 0.9rem;">
+                                    {{ event.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center py-5 text-muted">
+                                    <i class="fas fa-database mb-3" style="font-size: 2rem; opacity: 0.5;"></i>
+                                    <p>No activity logs found for this account.</p>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

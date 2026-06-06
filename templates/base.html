@@ -169,6 +169,11 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'watchlist.chart_bot' %}active{% endif %}" href="{{ url_for('watchlist.chart_bot') }}">
+                                <i class="fas fa-robot me-1"></i>Chart Bot
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link {% if request.endpoint == 'holdings.holdings' %}active{% endif %}" href="{{ url_for('holdings.holdings') }}">
                                 <i class="fas fa-briefcase me-1"></i>Holdings
                             </a>
@@ -183,6 +188,11 @@
                                 <i class="fas fa-wallet me-1"></i>Wallet
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'watchlist.security_log' %}active{% endif %}" href="{{ url_for('watchlist.security_log') }}">
+                                <i class="fas fa-shield-alt text-warning me-1"></i>Security
+                            </a>
+                        </li>
                     {% endif %}
                 </ul>
                 <ul class="navbar-nav ms-auto">
@@ -193,6 +203,11 @@
                             </a>
                         </li>
                     {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'auth.signup' %}active{% endif %}" href="{{ url_for('auth.signup') }}">
+                                <i class="fas fa-user-plus me-1"></i>Sign Up
+                            </a>
+                        </li>
                         <li class="nav-item">
                             <a class="nav-link {% if request.endpoint == 'auth.login' %}active{% endif %}" href="{{ url_for('auth.login') }}">
                                 <i class="fas fa-sign-in-alt me-1"></i>Login
@@ -211,5 +226,95 @@
     <!-- Bootstrap JS and Popper.js -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     {% block extra_js %}{% endblock %}
+    <!-- Security Modal (Hidden by default) -->
+    <div id="securityWarningModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; backdrop-filter: blur(8px); opacity: 0; transition: opacity 0.5s ease;">
+        <div style="background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(239, 68, 68, 0.5); border-radius: 16px; padding: 40px; text-align: center; max-width: 400px; box-shadow: 0 0 40px rgba(239, 68, 68, 0.3); transform: translateY(-20px); transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);" id="securityModalCard">
+            <i class="fas fa-shield-alt" style="font-size: 3.5rem; color: #ef4444; margin-bottom: 20px; animation: pulse 2s infinite; filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.6));"></i>
+            <h3 style="color: white; font-weight: 800; margin-bottom: 10px; font-family: 'Inter', sans-serif;">SECURITY ALERT</h3>
+            <p style="color: #94a3b8; margin-bottom: 20px; font-size: 0.95rem;">Your session is expiring due to inactivity to protect your account from unauthorized access.</p>
+            <h1 style="color: #ef4444; font-size: 4rem; margin-bottom: 25px; font-weight: 800; font-family: monospace; text-shadow: 0 0 20px rgba(239, 68, 68, 0.5);" id="securityCountdown">30</h1>
+            <button id="extendSessionBtn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 14px 24px; border-radius: 10px; font-weight: 600; cursor: pointer; width: 100%; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;">
+                <i class="fas fa-lock-open me-2"></i> Extend Session
+            </button>
+        </div>
+    </div>
+
+    <!-- Security: Auto-logout Warning & Timer -->
+    <script>
+        (function() {
+            let inactivityTime = function() {
+                let warningTime, logoutTime, modalInterval;
+                const warningDuration = 270000; // 4m30s
+                const logoutDuration = 300000; // 5m
+
+                // Reset timer on any interaction
+                window.onload = resetTimer;
+                document.onmousemove = resetTimer;
+                document.onkeypress = resetTimer;
+                document.onscroll = resetTimer;
+                document.onclick = resetTimer;
+
+                function showWarning() {
+                    const modal = document.getElementById('securityWarningModal');
+                    const modalCard = document.getElementById('securityModalCard');
+                    if (modal) {
+                        modal.style.display = 'flex';
+                        // Force a reflow to start the transition
+                        void modal.offsetWidth;
+                        modal.style.opacity = '1';
+                        modalCard.style.transform = 'translateY(0)';
+                        startCountdown();
+                    }
+                }
+
+                function logout() {
+                    window.location.href = "{{ url_for('auth.logout') }}";
+                }
+
+                function resetTimer() {
+                    const modal = document.getElementById('securityWarningModal');
+                    if (modal && modal.style.opacity === '1') {
+                       // Do not reset if modal is already showing, user must click "Extend Session"
+                       return;
+                    }
+                    clearTimeout(warningTime);
+                    clearTimeout(logoutTime);
+                    
+                    warningTime = setTimeout(showWarning, warningDuration);
+                    logoutTime = setTimeout(logout, logoutDuration);
+                }
+
+                function startCountdown() {
+                    let secondsLeft = 30;
+                    const countdownEl = document.getElementById('securityCountdown');
+                    countdownEl.innerText = secondsLeft;
+                    
+                    modalInterval = setInterval(() => {
+                        secondsLeft--;
+                        if(countdownEl) countdownEl.innerText = secondsLeft;
+                        if(secondsLeft <= 0) clearInterval(modalInterval);
+                    }, 1000);
+                    
+                    // Add click handler to extend
+                    const extendBtn = document.getElementById('extendSessionBtn');
+                    if(extendBtn) {
+                        extendBtn.onclick = () => {
+                            const modal = document.getElementById('securityWarningModal');
+                            modal.style.opacity = '0';
+                            setTimeout(() => { modal.style.display = 'none'; }, 500);
+                            
+                            clearInterval(modalInterval);
+                            resetTimer();
+                        };
+                    }
+                }
+            };
+            
+            // Only run if not on the login/home page
+            if (window.location.pathname !== '/login' && window.location.pathname !== '/') {
+                inactivityTime();
+            }
+        })();
+    </script>
 </body>
 </html>

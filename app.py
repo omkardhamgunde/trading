@@ -13,7 +13,7 @@ try:
 except ImportError:
     USE_GEVENT = False
 
-from flask import Flask
+from flask import Flask, render_template
 from flask_pymysql import MySQL
 from flask_socketio import SocketIO
 from datetime import timedelta
@@ -25,7 +25,7 @@ from config import Config
 from utils.logging_config import setup_logging
 
 # Import routes
-from routes.auth import init_auth_routes
+from routes.auth import init_auth_routes, limiter
 from routes.trading import init_trading_routes
 from routes.watchlist import init_watchlist_routes
 from routes.holdings import init_holdings_routes
@@ -50,7 +50,7 @@ app.config.update(
     SESSION_COOKIE_SECURE=Config.SESSION_COOKIE_SECURE,
     SESSION_COOKIE_HTTPONLY=Config.SESSION_COOKIE_HTTPONLY,
     SESSION_COOKIE_SAMESITE=Config.SESSION_COOKIE_SAMESITE,
-    PERMANENT_SESSION_LIFETIME=timedelta(days=1)
+    PERMANENT_SESSION_LIFETIME=timedelta(minutes=15)
 )
 
 # Configure MySQL
@@ -92,8 +92,14 @@ warnings = Config.validate_config()
 for warning in warnings:
     logger.warning(warning)
 
-# Initialize and register blueprints
 auth_bp = init_auth_routes(mysql, client_config, Config.GOOGLE_CLIENT_ID, Config.GOOGLE_CLIENT_SECRET)
+
+# Register the Rate Limiter specifically onto the main app context
+limiter.init_app(app)
+
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    return render_template('error.html', error_msg=f"BRUTE FORCE PROTECTION: {e.description}"), 429
 trading_bp = init_trading_routes(mysql)
 watchlist_bp = init_watchlist_routes(mysql)
 holdings_bp = init_holdings_routes(mysql)

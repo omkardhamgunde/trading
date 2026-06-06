@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sign Up</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow: auto;
+            position: relative;
+        }
+
+        .bg-shapes:before,
+        .bg-shapes:after {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            opacity: 0.2;
+            filter: blur(60px);
+            animation: float 12s infinite ease-in-out alternate;
+        }
+
+        .bg-shapes:before {
+            background: #60a5fa;
+            top: -100px;
+            left: -100px;
+            animation-delay: -2s;
+        }
+
+        .bg-shapes:after {
+            background: #f472b6;
+            bottom: -100px;
+            right: -100px;
+            animation-delay: -5s;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(40px, 20px) scale(1.1); }
+            100% { transform: translate(-40px, 40px) scale(0.9); }
+        }
+
+        .signup-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2.5rem 3rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 480px;
+            margin: 1rem;
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 10;
+        }
+
+        .signup-title {
+            color: #4f46e5;
+            font-size: 2.25rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .signup-subtitle {
+            color: #6b7280;
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 1.05rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.4rem;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            color: #4b5563;
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 0.65rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.95rem 1.25rem;
+            padding-left: 3rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            font-size: 1.05rem;
+            transition: all 0.3s;
+            color: #1f2937;
+            background-color: #f9fafb;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #818cf8;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+            background-color: white;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 2.55rem;
+            color: #9ca3af;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus + .input-icon,
+        .form-input:not(:placeholder-shown) + .input-icon {
+            color: #6366f1;
+        }
+
+        .field-error {
+            color: #dc2626;
+            font-size: 0.85rem;
+            margin-top: 0.4rem;
+        }
+
+        .submit-button {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: linear-gradient(to right, #4f46e5, #7c3aed);
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            letter-spacing: 0.025em;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .submit-button:hover {
+            background: linear-gradient(to right, #4338ca, #6d28d9);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: #6b7280;
+            font-size: 1rem;
+        }
+
+        .login-link a {
+            color: #6366f1;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .login-link a:hover {
+            color: #4f46e5;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-shapes"></div>
+    <div class="signup-container">
+        <h1 class="signup-title">Create Account</h1>
+        <p class="signup-subtitle">Start with a virtual wallet and live watchlist</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="p-4 mb-4 text-sm
+                {% if category == 'danger' %} bg-red-100 text-red-700 rounded-lg {% endif %}
+                {% if category == 'success' %} bg-green-100 text-green-700 rounded-lg {% endif %}
+                {% if category == 'info' %} bg-blue-100 text-blue-700 rounded-lg {% endif %}"
+                role="alert">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            {{ form.hidden_tag() }}
+
+            <div class="form-group">
+                <label class="form-label">{{ form.username.label }}</label>
+                {{ form.username(class="form-input", placeholder="Choose a username") }}
+                <i class="fas fa-user input-icon"></i>
+                {% for error in form.username.errors %}
+                    <div class="field-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">{{ form.email.label }}</label>
+                {{ form.email(class="form-input", placeholder="Enter your email") }}
+                <i class="fas fa-envelope input-icon"></i>
+                {% for error in form.email.errors %}
+                    <div class="field-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">{{ form.password.label }}</label>
+                {{ form.password(class="form-input", placeholder="Create a password") }}
+                <i class="fas fa-lock input-icon"></i>
+                {% for error in form.password.errors %}
+                    <div class="field-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">{{ form.confirm_password.label }}</label>
+                {{ form.confirm_password(class="form-input", placeholder="Confirm your password") }}
+                <i class="fas fa-lock input-icon"></i>
+                {% for error in form.confirm_password.errors %}
+                    <div class="field-error">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            {{ form.submit(class="submit-button", value="Create Account") }}
+        </form>
+
+        <div class="login-link">
+            Already have an account? <a href="{{ url_for('auth.login') }}">Sign in</a>
+        </div>
+    </div>
+
+    <script>
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const submitBtn = document.querySelector('.submit-button');
+            if (submitBtn) {
+                if (submitBtn.dataset.processing) {
+                    e.preventDefault();
+                    return;
+                }
+                submitBtn.dataset.processing = "true";
+                submitBtn.value = "Creating account...";
+                submitBtn.style.opacity = "0.7";
+                submitBtn.style.cursor = "not-allowed";
+                submitBtn.style.pointerEvents = "none";
+            }
+        });
+    </script>
+</body>
+</html>

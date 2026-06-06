@@ -2,6 +2,9 @@
 Wallet service for wallet operations.
 """
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def get_wallet_balance(mysql, user_id):

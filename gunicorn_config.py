@@ -2,14 +2,15 @@
 Gunicorn configuration for production deployment.
 Uses gevent workers for proper WebSocket support.
 """
-import multiprocessing
+import os
 
 # Server socket
-bind = "0.0.0.0:5001"
+bind = f"0.0.0.0:{os.getenv('PORT', '5001')}"
 backlog = 2048
 
 # Worker processes
-workers = multiprocessing.cpu_count() * 2 + 1
+# Keep one worker unless you add a Socket.IO message queue such as Redis.
+workers = int(os.getenv("WEB_CONCURRENCY", "1"))
 worker_class = "gevent"
 worker_connections = 1000
 timeout = 30

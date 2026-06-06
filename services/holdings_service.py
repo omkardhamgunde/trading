@@ -3,11 +3,9 @@ Holdings service for portfolio calculations.
 Optimized with batch processing and efficient data structures.
 """
 from collections import defaultdict
-import yfinance as yf
 import logging
 import time
-from utils.cache import price_cache
-from utils.metrics import metrics_tracker
+import math
 from utils.performance import performance_monitor
 
 logger = logging.getLogger(__name__)
@@ -61,8 +59,7 @@ def calculate_holdings(trades):
 
 def _batch_fetch_prices(symbols):
     """
-    Optimized batch price fetching with caching.
-    Fetches multiple stock prices efficiently using yfinance batch API.
+    Fetch current prices using the same converted price path as the watchlist.
     
     Args:
         symbols: List of stock symbols
@@ -71,53 +68,26 @@ def _batch_fetch_prices(symbols):
         Dictionary mapping symbol to current price
     """
     prices = {}
-    uncached_symbols = []
-    
-    # Check cache first
-    for symbol in symbols:
-        cached_price = price_cache.get(symbol)
-        if cached_price is not None:
-            prices[symbol] = cached_price
-        else:
-            uncached_symbols.append(symbol)
-    
-    # Batch fetch uncached symbols
-    if uncached_symbols:
-        start_time = time.time()
+    if not symbols:
+        return prices
+
+    from services.stock_service import get_stock_prices
+
+    fetched_prices = get_stock_prices(symbols)
+    for symbol, price_data in fetched_prices.items():
+        price = price_data.get('price') if isinstance(price_data, dict) else price_data
+        if price is None or price == 'N/A':
+            logger.warning(f"Price not available for {symbol}")
+            continue
+
         try:
-            # Use yfinance's download for batch fetching (more efficient)
-            tickers = yf.download(uncached_symbols, period='1d', progress=False, group_by='ticker')
-            
-            for symbol in uncached_symbols:
-                try:
-                    if len(uncached_symbols) == 1:
-                        # Single symbol returns different structure
-                        if len(tickers) > 0:
-                            current_price = float(tickers['Close'].iloc[-1])
-                        else:
-                            continue
-                    else:
-                        # Multiple symbols
-                        if symbol in tickers.columns.levels[0]:
-                            current_price = float(tickers[symbol]['Close'].iloc[-1])
-                        else:
-                            continue
-                    
-                    prices[symbol] = current_price
-                    # Cache the price
-                    price_cache.set(symbol, current_price, ttl=10)
-                    
-                except (KeyError, IndexError, ValueError) as e:
-                    logger.warning(f"Could not fetch price for {symbol}: {e}")
-                    continue
-            
-            # Record API call with duration
-            duration_ms = (time.time() - start_time) * 1000
-            metrics_tracker.record_api_call(duration_ms)
-            
-        except Exception as e:
-            logger.error(f"Error in batch price fetch: {e}", exc_info=True)
-            metrics_tracker.record_api_call()
+            current_price = float(price)
+            if math.isnan(current_price):
+                logger.warning(f"NaN price for {symbol}")
+                continue
+            prices[symbol] = current_price
+        except (TypeError, ValueError) as e:
+            logger.warning(f"Could not parse price for {symbol}: {e}")
     
     return prices
 
@@ -151,11 +121,13 @@ def get_holdings_with_prices(holdings_dict):
     total_cost = 0.0
     
     for symbol, data in active_holdings.items():
-        if symbol not in prices:
-            logger.warning(f"Price not available for {symbol}")
-            continue
+        current_price = prices.get(symbol)
         
-        current_price = prices[symbol]
+        # Fallback to avg_price if current_price is unavailable or NaN
+        if current_price is None or math.isnan(current_price):
+            logger.warning(f"Price not available for {symbol}, using average price as fallback")
+            current_price = data['avg_price']
+        
         quantity = data['quantity']
         avg_price = data['avg_price']
         total_cost_stock = data['total_cost']

@@ -88,5 +88,5 @@ class TTLCache:
             }
 
 # Global cache instances
-price_cache = TTLCache(max_size=2000, default_ttl=120)  # Longer TTL to avoid free-host API throttling
-api_cache = TTLCache(max_size=500, default_ttl=300)  # 5 minute TTL for API responses
+price_cache = TTLCache(max_size=2000, default_ttl=20)  # Keep dashboard updates responsive
+api_cache = TTLCache(max_size=500, default_ttl=20)

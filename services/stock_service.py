@@ -13,8 +13,8 @@ from utils.currency import convert_price_to_usd
 logger = logging.getLogger(__name__)
 
 INDEX_SYMBOLS = {'^NSEI', '^IXIC', '^DJI', '^BSESN'}
-INDEX_CACHE_TTL = 300
-PRICE_CACHE_TTL = 120
+INDEX_CACHE_TTL = 20
+PRICE_CACHE_TTL = 20
 
 INDEX_FALLBACK_PRICES = {
     '^NSEI': {'price': 23366.70, 'change': -49.85, 'change_percent': -0.21},

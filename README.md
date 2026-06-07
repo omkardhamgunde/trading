@@ -2,7 +2,13 @@
 
 Full-stack trading simulator built with Flask, MySQL/TiDB, Flask-SocketIO, and Yahoo Finance data via `yfinance`. The project supports local authentication, virtual wallet balances, watchlists, simulated buy/sell trades, holdings P/L, market heatmaps, chart-bot signals, health checks, caching, and CI-tested deployment.
 
-[Live Demo](https://trading-1-mdz8.onrender.com/) | [Deployment Guide](DEPLOYMENT.md) | [Performance Baseline](API_CALL_VERIFICATION.md)
+<p align="center">
+  <a href="https://trading-1-mdz8.onrender.com/">
+    <img src="https://img.shields.io/badge/Live%20Demo-Open%20Project-16a34a?style=for-the-badge&logo=render&logoColor=white" alt="Live Demo" />
+  </a>
+</p>
+
+[Deployment Guide](DEPLOYMENT.md) | [Performance Baseline](API_CALL_VERIFICATION.md)
 
 ![CI](https://github.com/omkardhamgunde/trading/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)

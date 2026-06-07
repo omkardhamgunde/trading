@@ -3,6 +3,12 @@
 # Environment variables - NEVER commit .env file
 .env
 
+# Personal resume artifacts
+resume*.md
+resume*.txt
+*resume*.pdf
+omkar*.pdf
+
 # Logs
 logs/
 *.log

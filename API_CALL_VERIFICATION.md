@@ -1,6 +1,6 @@
 # API Call Reduction Baseline
 
-This document gives the baseline behind the resume claim about reduced external market-data calls.
+This document gives the baseline behind the project claim about reduced external market-data calls.
 
 ## Baseline
 
@@ -61,7 +61,7 @@ current = 4320 * 44 = 190,080 calls/day
 reduction = (518400 - 190080) / 518400 = 63.3%
 ```
 
-This is a realistic resume baseline because every dashboard shares index symbols.
+This is a realistic project baseline because every dashboard shares index symbols.
 
 ### Scenario 3: Five users watching the same symbols
 
@@ -75,7 +75,7 @@ reduction = 90.0%
 
 This is the best-case benefit of shared server-side caching.
 
-## Recommended Resume Claim
+## Recommended Project Claim
 
 Use a range and include the baseline:
 

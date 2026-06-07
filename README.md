@@ -12,13 +12,9 @@ Full-stack trading simulator built with Flask, MySQL/TiDB, Flask-SocketIO, and Y
 
 ## Screenshots
 
-| Home | Login |
+| Watchlist | Holdings |
 | --- | --- |
-| ![Home page](docs/screenshots/home.png) | ![Login page](docs/screenshots/login.png) |
-
-| Signup |
-| --- |
-| ![Signup page](docs/screenshots/signup.png) |
+| ![Watchlist page](docs/screenshots/watchlist.png) | ![Holdings page](docs/screenshots/holdings.png) |
 
 ## Why This Project Stands Out
 

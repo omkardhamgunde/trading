@@ -195,68 +195,6 @@
             text-decoration: underline;
         }
         
-        .separator {
-            display: flex;
-            align-items: center;
-            text-align: center;
-            margin: 2rem 0;
-            color: #9ca3af;
-        }
-        
-        .separator::before,
-        .separator::after {
-            content: '';
-            flex: 1;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .separator:not(:empty)::before {
-            margin-right: 1rem;
-        }
-        
-        .separator:not(:empty)::after {
-            margin-left: 1rem;
-        }
-        
-        .social-login {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        
-        .social-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 3rem;
-            height: 3rem;
-            border-radius: 50%;
-            background: #f3f4f6;
-            color: #4b5563;
-            transition: all 0.3s;
-            font-size: 1.25rem;
-        }
-        
-        .social-btn:hover {
-            transform: translateY(-3px);
-        }
-        
-        .google:hover {
-            background: #f5e7ea;
-            color: #ea4335;
-        }
-        
-        .facebook:hover {
-            background: #e7eaf9;
-            color: #3b5998;
-        }
-        
-        .apple:hover {
-            background: #e5e7eb;
-            color: #000;
-        }
-        
         .signup-link {
             text-align: center;
             margin-top: 1.5rem;
@@ -312,10 +250,6 @@
                 padding-top: 0.9rem;
                 padding-bottom: 0.9rem;
             }
-
-            .separator {
-                margin: 1.5rem 0;
-            }
         }
     </style>
 </head>
@@ -356,44 +290,14 @@
             </div>
             {{ form.submit(class="submit-button", value="Sign In") }}
         </form>
-        
-        <div class="separator">Or continue with</div>
-        
-        <div class="social-login">
-            <a href="{{ url_for('auth.google_login') }}" class="social-btn google">
-                <i class="fab fa-google"></i>
-            </a>
-            <a href="#" class="social-btn facebook"><i class="fab fa-facebook-f"></i></a>
-            <a href="#" class="social-btn apple"><i class="fab fa-apple"></i></a>
-        </div>
-        
+
         <div class="signup-link">
             Don't have an account? <a href="{{ url_for('auth.signup') }}">Sign up</a>
         </div>
     </div>
-    
-    <!-- Add Google OAuth2 script -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    
+
     <!-- Add CSRF token for AJAX requests -->
     <script>
-        // Function to handle Google Sign-In success
-        function handleCredentialResponse(response) {
-            // This function is not needed for server-side flow
-            // We're using the direct link approach which is more secure
-        }
-        
-        // Add click handler for Google button
-        document.addEventListener('DOMContentLoaded', function() {
-            const googleBtn = document.querySelector('.social-btn.google');
-            if (googleBtn) {
-                googleBtn.addEventListener('click', function(e) {
-                    // No need to prevent default as we want the link to work normally
-                    // The server will handle the OAuth flow
-                });
-            }
-        });
-
         // Prevent double form submissions by disabling the button instantly
         document.querySelector('form').addEventListener('submit', function(e) {
             const submitBtn = document.querySelector('.submit-button');

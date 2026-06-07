@@ -174,10 +174,10 @@
     \resumeProjectHeading
         {\href{https://github.com/omkardhamgunde/trading}{\textbf{\large{\underline{Trading \& Portfolio Analysis Platform}}} \href{https://github.com/omkardhamgunde/trading}{\raisebox{-0.1\height}\faExternalLink }} $|$ \large{\underline{Python, Flask, MySQL, WebSocket, yfinance API}}}{\href{https://github.com/omkardhamgunde/trading}{\raisebox{-0.1\height}\faGithub}}
         \resumeItemListStart
-            \resumeItem{\normalsize{Built \textbf{Flask} trading simulator with \textbf{10+ REST routes}, \textbf{Flask-SocketIO} streaming, and live watchlists for \textbf{130+ equities} \& \textbf{4 indices}.}}
-            \resumeItem{\normalsize{Optimized \textbf{yfinance} polling with \textbf{thread-safe TTL/LRU cache}, reducing API calls by \textbf{60\% vs. uncached per-update requests}.}}
+            \resumeItem{\normalsize{Built \textbf{Flask} trading simulator with \textbf{10+ REST routes}, \textbf{Flask-SocketIO} streaming, and live watchlists for \textbf{850+ instruments} \& \textbf{4 indices}.}}
+            \resumeItem{\normalsize{Optimized \textbf{yfinance} polling with \textbf{thread-safe TTL/LRU cache}, cutting external calls by \textbf{50--75\% vs. 10s uncached per-client polling}.}}
             \resumeItem{\normalsize{Engineered \textbf{autocomplete stock search} across NSE/US/Crypto assets using Yahoo metadata, category filters, and ticker normalization.}}
-            \resumeItem{\normalsize{Implemented \textbf{atomic MySQL transactions}, \textbf{Google OAuth 2.0}, \textbf{CSRF-safe WTForms}, rate limiting, and \textbf{Gunicorn/gevent} deployment.}}
+            \resumeItem{\normalsize{Implemented \textbf{atomic MySQL transactions}, password hashing, \textbf{CSRF-safe WTForms}, rate limiting, \textbf{pytest/GitHub Actions CI}, and \textbf{Gunicorn/gevent} deployment.}}
         \resumeItemListEnd
         
     \resumeProjectHeading

@@ -174,8 +174,8 @@
     \resumeProjectHeading
         {\href{https://github.com/omkardhamgunde/trading}{\textbf{\large{\underline{Trading \& Portfolio Analysis Platform}}} \href{https://github.com/omkardhamgunde/trading}{\raisebox{-0.1\height}\faExternalLink }} $|$ \large{\underline{Python, Flask, MySQL, WebSocket, yfinance API}}}{\href{https://github.com/omkardhamgunde/trading}{\raisebox{-0.1\height}\faGithub}}
         \resumeItemListStart
-            \resumeItem{\normalsize{Built full-stack financial platform with \textbf{10+ API routes}, streaming live prices for \textbf{130+ equities} \& \textbf{4 market indices} via \textbf{WebSocket}.}}
-            \resumeItem{\normalsize{Designed \textbf{4 MySQL tables} with \textbf{PyMySQL}, implementing \textbf{thread-safe LRU cache} that reduced API calls by \textbf{60\%}.}}
+            \resumeItem{\normalsize{Built full-stack financial platform with \textbf{10+ API routes}, streaming live prices for \textbf{850+ instruments} \& \textbf{4 market indices} via \textbf{WebSocket}.}}
+            \resumeItem{\normalsize{Designed \textbf{6 MySQL tables} with \textbf{PyMySQL}, implementing \textbf{thread-safe LRU cache} that cut external calls by \textbf{50--75\% vs. 10s polling}.}}
             \resumeItem{\normalsize{Engineered intelligent stock search with \textbf{autocomplete} and \textbf{Yahoo Finance metadata lookup} for both NS and BO tickers.}}
             \resumeItem{\normalsize{Implemented \textbf{atomic transactions} for trades, \textbf{OAuth 2.0}, \textbf{WTForms} validation, and deployed on \textbf{Gunicorn}.}}
         \resumeItemListEnd

@@ -1,302 +1,212 @@
-# Trading Dashboard (Flask + MySQL)
+# Real-Time Trading Simulator and Portfolio Analytics
 
-Beautiful, production-minded trading dashboard that showcases full‑stack skills: authentication (email + Google OAuth), watchlists, simulated equity trading, live holdings P/L using Yahoo Finance, and modern UI with Tailwind CSS.
+Full-stack trading simulator built with Flask, MySQL/TiDB, Flask-SocketIO, and Yahoo Finance data via `yfinance`. The project supports local authentication, virtual wallet balances, watchlists, simulated buy/sell trades, holdings P/L, market heatmaps, chart-bot signals, health checks, caching, and CI-tested deployment.
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Flask-2.x-000?logo=flask&logoColor=white" />
-  <img src="https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white" />
-  <img src="https://img.shields.io/badge/MySQL-8.x-4479A1?logo=mysql&logoColor=white" />
-  <img src="https://img.shields.io/badge/TailwindCSS-3.x-06B6D4?logo=tailwindcss&logoColor=white" />
-  <img src="https://img.shields.io/badge/yfinance-latest-green" />
-</p>
+[Live Demo](https://trading-1-mdz8.onrender.com/) | [Deployment Guide](DEPLOYMENT.md) | [Performance Baseline](API_CALL_VERIFICATION.md)
 
-> Built for learning, demoing, and interviewing: clear architecture, secure patterns, intelligent stock search, and thoughtful UX. Easy to run locally on Windows/macOS/Linux.
+![CI](https://github.com/omkardhamgunde/trading/actions/workflows/ci.yml/badge.svg)
+![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-2.3-000?logo=flask&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL%2FTiDB-Ready-4479A1?logo=mysql&logoColor=white)
+![Socket.IO](https://img.shields.io/badge/WebSocket-Flask--SocketIO-010101)
 
-## Dashboard Preview
-> A modern, dark-themed trading dashboard with real-time price tracking, intelligent stock search, and portfolio management.
+## Screenshots
 
-## Table of Contents
-- [Features](#features)
-- [Dashboard Preview](#dashboard-preview)
-- [Architecture](#architecture)
-- [Local Setup](#local-setup)
-- [Key Routes](#key-routes)
-- [Database Schema](#database-schema)
-- [How to Use](#how-to-use)
-- [Security Notes](#security-notes)
-- [Roadmap](#roadmap)
-- [License](#license)
+| Home | Login |
+| --- | --- |
+| ![Home page](docs/screenshots/home.png) | ![Login page](docs/screenshots/login.png) |
 
+| Signup |
+| --- |
+| ![Signup page](docs/screenshots/signup.png) |
+
+## Why This Project Stands Out
+
+- Real-time trading workflow: watchlist, wallet, buy/sell simulation, holdings, trade log, and market indices.
+- 853 configured instruments across Indian equities, US assets, ETFs/commodities/bonds, and crypto pairs.
+- Thread-safe TTL/LRU cache reduces external market-data calls versus uncached per-client polling.
+- Flask-SocketIO pushes price and holdings updates every 20 seconds instead of forcing page refreshes.
+- TiDB/MySQL health endpoint validates required tables before users hit runtime failures.
+- CI runs focused unit tests on every push and pull request.
+
+## System Design
+
+```mermaid
+flowchart LR
+    Browser[Browser UI] --> Flask[Flask Routes]
+    Browser <-->|Socket.IO 20s updates| WS[WebSocket Layer]
+    Flask --> Auth[WTForms Auth + Sessions]
+    Flask --> Services[Service Layer]
+    Services --> Cache[Thread-safe TTL/LRU Cache]
+    Cache --> Yahoo[Yahoo Finance via yfinance]
+    Services --> DB[(TiDB Cloud / MySQL)]
+    WS --> Services
+    Flask --> Health[Health + Metrics Endpoints]
+```
+
+## Tech Stack
+
+- Backend: Python, Flask, Flask-SocketIO, Flask-WTF, Flask-Limiter
+- Database: MySQL-compatible TiDB Cloud, PyMySQL, SSL transport
+- Data: `yfinance` for equities, indices, ETFs, and crypto price data
+- Frontend: Jinja2, Tailwind CSS, Bootstrap utilities, vanilla JavaScript
+- Runtime: Gunicorn, gevent WebSocket worker, Render deployment
+- Quality: pytest, GitHub Actions CI, mocked database and market-data tests
 
 ## Features
 
-### 🔐 Authentication
-- **Email/Password Login** via `WTForms` with secure validation
-- **Google OAuth 2.0** integration with CSRF-safe state management
-- Session-based authentication with secure cookie handling
+- Local email/password signup and login with hashed passwords.
+- Session-based protected routes and HTTP-only cookies.
+- Signup creates a virtual wallet with a starting balance.
+- Add/remove watchlist symbols with autocomplete search.
+- Market support for India, US, and crypto assets.
+- Live index cards for Nifty, Nasdaq, Dow Jones, and Sensex.
+- Simulated market orders with wallet balance validation.
+- Holdings view with average price, current value, and P/L.
+- Wallet transaction history and trade audit log.
+- Market heatmap and chart-bot signal page.
+- `/health`, `/health/db`, and `/metrics` endpoints for deployment checks.
 
-### 📊 Portfolio Management
-- **Holdings View** with real-time data:
-  - Average buy price tracking
-  - Current market price via `yfinance`
-  - Profit/Loss calculation (absolute & percentage)
-  - Total portfolio value and performance
-- **Trade Log** with complete transaction history
-- Protection against accidental data loss (holdings must be exited before clearing logs)
+## Performance Baseline
 
-### 👀 Smart Watchlist
-- Add/remove stock tickers with intuitive UI
-- **Intelligent Stock Search** with autocomplete:
-  - Search by company name (e.g., "Reliance", "HDFC Bank")
-  - Automatic Yahoo Finance symbol lookup
-  - Works for both Indian (.NS, .BO) and US stocks
-- Real-time price updates with change indicators
-- Live index tracking (Nifty, Sensex, Nasdaq, Dow Jones)
+The cache optimization is documented against a clear baseline:
 
-### 💰 Trading Simulator
-- **Quick Trade** feature for fast buy/sell execution
-- Market order simulation with real-time pricing
-- Wallet balance management with add funds feature
-- Trade validation (sufficient balance, positive quantities)
-- Complete audit trail of all transactions
+- Baseline: uncached per-client market polling every 10 seconds.
+- Current design: 20-second WebSocket refresh plus shared 20-second TTL/LRU cache.
+- Conservative result: 50% fewer external calls for a single continuous user.
+- Multi-user mixed watchlist example: 63.3% fewer external calls with 5 users, 8 unique stocks each, and 4 shared indices.
+- Shared-symbol example: up to 90% fewer calls with 5 users watching the same symbols.
 
-### 🎨 Modern UI
-- Clean, dark-themed interface with Tailwind CSS
-- Responsive design for desktop and mobile
-- Real-time price change indicators (green/red)
-- Smooth transitions and hover effects
-- Professional dashboard layout
+Detailed math is in [API_CALL_VERIFICATION.md](API_CALL_VERIFICATION.md).
 
+Resume-safe wording:
 
-## Architecture
+> Optimized yfinance polling with thread-safe TTL/LRU caching, cutting external calls by 50-75% versus 10-second uncached per-client polling.
 
-### Project Structure
-```
-trading-main/
-├── app.py                      # Main Flask application with all routes
-├── templates/
-│   ├── base.html              # Base template with navigation
-│   ├── home.html              # Landing page
-│   ├── login.html             # Login page (email/password + Google OAuth)
-│   ├── watchlist.html         # Watchlist with stock search & quick trade
-│   ├── holdings.html          # Portfolio holdings with P/L
-│   ├── trade_log.html         # Transaction history
-│   └── wallet.html            # Wallet balance management
-├── .gitignore                  # Git ignore file
-└── README.md                   # This file
+## Testing
+
+Run the unit tests locally:
+
+```bash
+pip install -r requirements-dev.txt
+python -m pytest -q
 ```
 
-### High-Level Flow
-1. **Authentication**: User logs in via email/password or Google OAuth
-2. **Stock Discovery**: Search stocks by company name with intelligent autocomplete
-3. **Watchlist**: Add stocks to watchlist, view real-time prices and indices
-4. **Trading**: Execute buy/sell orders with wallet balance validation
-5. **Portfolio**: View holdings with live P/L calculations using `yfinance`
-6. **Persistence**: All data stored in MySQL (users, watchlist, trades, wallet)
+Current coverage focus:
 
-### Key Technologies
-- **Backend**: Flask (Python) with session-based auth
-- **Database**: MySQL with PyMySQL connector
-- **Stock Data**: Yahoo Finance API via `yfinance` library
-- **Frontend**: Jinja2 templates + Tailwind CSS + vanilla JavaScript
-- **OAuth**: Google OAuth 2.0 with `google-auth-oauthlib`
-
+- Signup creates hashed users and starting wallets.
+- Login accepts valid hashes, rejects invalid passwords, and logs activity.
+- Wallet service validates deposits, writes transactions, and reads balances.
+- Watchlist route handles duplicate checks and symbol normalization.
+- Stock search and cache behavior are tested without live Yahoo calls.
+- Database health checks detect missing TiDB/MySQL tables.
+- Performance monitor reports baseline improvements without deadlocks.
 
 ## Local Setup
 
-### Prerequisites
-- Python 3.10 or higher
-- MySQL 8.x
-- pip (Python package manager)
+1. Clone the repository.
 
-### Installation Steps
-
-1. **Clone the repository**
 ```bash
 git clone https://github.com/omkardhamgunde/trading.git
 cd trading
 ```
 
-2. **Install Python dependencies**
+2. Create and activate a virtual environment.
+
 ```bash
-pip install flask flask-pymysql flask-wtf wtforms yfinance google-auth google-auth-oauthlib requests
+python -m venv .venv
+.venv\Scripts\activate
 ```
 
-3. **Set up MySQL database**
-```sql
-CREATE DATABASE trading_db;
-USE trading_db;
--- Run the SQL schema from "Database Schema" section above
+3. Install dependencies.
+
+```bash
+pip install -r requirements.txt
 ```
 
-4. **Configure MySQL connection in app.py**
-```python
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = 'your_password'
-app.config['MYSQL_DB'] = 'trading_db'
+4. Copy environment variables.
+
+```bash
+copy .env.example .env
 ```
 
-5. **Set up Google OAuth** (optional, for Google login)
-   - Go to [Google Cloud Console](https://console.cloud.google.com/)
-   - Create a new project
-   - Enable Google+ API
-   - Create OAuth 2.0 credentials
-   - Add `http://localhost:5001/login/google/authorized` as authorized redirect URI
-   - Update `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in `app.py`
+5. Create the database tables.
 
-6. **Run the application**
-```powershell
-# PowerShell (Windows)
-$env:OAUTHLIB_INSECURE_TRANSPORT="1"  # For local development only
+Run [schema.sql](schema.sql) in your MySQL/TiDB SQL console.
+
+6. Start the app.
+
+```bash
 python app.py
 ```
 
-```bash
-# Bash (Linux/Mac)
-export OAUTHLIB_INSECURE_TRANSPORT=1  # For local development only
-python app.py
+Open `http://127.0.0.1:5001`.
+
+## Environment Variables
+
+```env
+SECRET_KEY=change-this
+FLASK_ENV=production
+MYSQL_HOST=gateway01.ap-southeast-1.prod.aws.tidbcloud.com
+MYSQL_PORT=4000
+MYSQL_USER=your_tidb_user
+MYSQL_PASSWORD=your_tidb_password
+MYSQL_DB=trading_website
+MYSQL_SSL=True
+MYSQL_SSL_CA=/etc/ssl/certs/ca-certificates.crt
+SESSION_COOKIE_SECURE=True
 ```
 
-7. **Access the app**
-   - Open browser: http://localhost:5001
-   - Create an account or login with Google
-   - Start trading!
+## Deployment
 
+Recommended free/low-cost path:
 
-## Key Routes
-
-### Public Routes
-- `GET /` - Landing page with app overview
-- `GET /login` - Login page (email/password or Google OAuth)
-- `POST /login` - Process email/password authentication
-- `GET /login/google` - Initiate Google OAuth flow
-- `GET /login/google/authorized` - Google OAuth callback handler
-
-### Protected Routes (require authentication)
-- `GET /watchlist` - View watchlist with real-time prices and indices
-- `POST /watchlist` - Add stock to watchlist
-- `POST /remove_from_watchlist` - Remove stock from watchlist
-- `GET /search_stocks` - API endpoint for stock search autocomplete
-- `POST /trade` - Execute buy/sell trade (Quick Trade feature)
-- `GET /holdings` - View portfolio holdings with P/L calculations
-- `GET /trade_log` - View complete transaction history
-- `POST /clear_trade_log` - Clear trade log (protected: prevents deletion if holdings exist)
-- `GET /wallet` - View wallet balance
-- `POST /add_funds` - Add funds to wallet
-- `GET /logout` - End user session
-
-
- 
-
-
-## How to Use
-
-### 1. Getting Started
-- **Register**: Create an account with email/password or use Google OAuth
-- **Add Funds**: Navigate to Wallet and add funds to start trading
-
-### 2. Building Your Watchlist
-- Go to **Watchlist** page
-- Type company name in search box (e.g., "Reliance", "Apple", "Tesla")
-- Select from autocomplete dropdown
-- Stock is added with real-time price tracking
-
-### 3. Trading Stocks
-**Method 1: Quick Trade (from Watchlist)**
-- In the watchlist page, use the "Quick Trade" form
-- Search stock by company name (shows Yahoo symbol in brackets)
-- Select "Buy" or "Sell"
-- Enter quantity
-- Click "Execute Trade"
-
-**Method 2: Regular Trade**
-- Enter stock symbol directly if you know it
-- Specify action (Buy/Sell) and quantity
-- System validates balance and executes trade
-
-### 4. Monitoring Portfolio
-- **Holdings**: View all your positions with:
-  - Average buy price
-  - Current market price
-  - Profit/Loss ($ and %)
-  - Total portfolio value
-- **Trade Log**: Complete history of all transactions
-  - Clear log only when no active holdings
-
-### 5. Managing Wallet
-- Add funds anytime from Wallet page
-- Balance updates automatically after trades
-- View current balance in Wallet section
+1. Push this repository to GitHub.
+2. Create a TiDB Cloud Serverless cluster.
+3. Run [schema.sql](schema.sql).
+4. Create a Render Web Service from this repo.
+5. Use:
+   - Build command: `pip install -r requirements.txt`
+   - Start command: `gunicorn --config gunicorn_config.py wsgi:application`
+6. Add the environment variables above in Render.
+7. Check:
+   - `/health`
+   - `/health/db`
+   - `/metrics`
 
 ## Security Notes
-- ⚠️ **Never commit real secrets** - Use environment variables or secret stores
-- 🔒 Set `SESSION_COOKIE_SECURE=True` behind HTTPS in production
-- 🔐 Restrict Google OAuth credentials to correct redirect URI
-- ✅ All user inputs are validated and sanitized
-- 🛡️ Passwords are hashed using Werkzeug security
-- 🔑 Sessions use secure cookie handling with HTTPONLY flag
-- 💾 SQL queries use parameterized statements to prevent injection
 
+- Passwords are stored with Werkzeug password hashing.
+- SQL access uses parameterized queries.
+- Flask-WTF CSRF protection is enabled for forms.
+- Login/signup routes use Flask-Limiter rate limiting.
+- Sessions use HTTP-only cookies and can be made HTTPS-only in production.
+- Secrets are read from environment variables, not committed.
+- TiDB Cloud connections require secure transport with CA verification.
+- The database health endpoint validates required tables before feature use.
 
-## Database Schema
+## Project Structure
 
-### Required Tables
-
-```sql
--- Users table
-CREATE TABLE users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255),
-    name VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Watchlist table
-CREATE TABLE watchlist (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    stock_symbol VARCHAR(50) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    UNIQUE KEY unique_user_stock (user_id, stock_symbol)
-);
-
--- Trade log table
-CREATE TABLE trade_log (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    stock_symbol VARCHAR(50) NOT NULL,
-    action VARCHAR(10) NOT NULL,  -- 'BUY' or 'SELL'
-    quantity INT NOT NULL,
-    price DECIMAL(10, 2) NOT NULL,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-);
-
--- Wallet table
-CREATE TABLE wallet (
-    user_id INT PRIMARY KEY,
-    balance DECIMAL(15, 2) DEFAULT 0.00,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-);
+```text
+trading-main/
+|-- app.py
+|-- wsgi.py
+|-- config.py
+|-- routes/
+|-- services/
+|-- handlers/
+|-- utils/
+|-- templates/
+|-- tests/
+|-- docs/screenshots/
+|-- schema.sql
+|-- render.yaml
+|-- gunicorn_config.py
+|-- requirements.txt
+|-- requirements-dev.txt
+`-- .github/workflows/ci.yml
 ```
 
-## Roadmap
-
-### Planned Features
-- ⏱️ **Real-time price updates** via WebSocket connections
-- 📄 **Pagination and filters** on trade logs
-- 📊 **Advanced charts** for portfolio performance tracking
-- 🔔 **Price alerts** for watchlist stocks
-- 📱 **Mobile app** (React Native or Flutter)
-- 🐳 **Docker containerization** (app + MySQL via docker-compose)
-- ✅ **Unit & integration tests** (pytest)
-- 🌐 **API endpoints** for third-party integrations
-- 📈 **Portfolio analytics** (Sharpe ratio, max drawdown, etc.)
-
-
 ## License
-MIT — feel free to use for learning and portfolio projects. Attribution appreciated.
+
+MIT. Built as a learning and portfolio project.

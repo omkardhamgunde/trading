@@ -14,7 +14,7 @@ class PerformanceMonitor:
     """Thread-safe performance monitor for tracking latencies."""
     
     def __init__(self, max_samples=1000):
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
         self.latencies = deque(maxlen=max_samples)
         self.baseline_latencies = deque(maxlen=100)  # Baseline before optimizations
         self.baseline_set = False
@@ -54,12 +54,12 @@ class PerformanceMonitor:
         with self._lock:
             baseline = self.get_baseline_average_latency()
             current = self.get_average_latency()
-            
+
             if baseline == 0:
                 return 0
-            
+
             improvement = ((baseline - current) / baseline) * 100
-            return max(0, improvement)  # Don't return negative improvements
+            return max(0, improvement)
     
     def get_stats(self):
         """Get performance statistics."""
